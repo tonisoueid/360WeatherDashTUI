@@ -99,6 +99,19 @@ func debounceCmd(query string, seq int) tea.Cmd {
 	})
 }
 
+// tickCmd schedules the next auto-refresh.
+//
+// One batched request per interval costs roughly 96 calls a day at the
+// default fifteen minutes — negligible against any rate limit, and the
+// difference between a live dashboard and one quietly showing this
+// morning's weather at six in the evening.
+func tickCmd(d time.Duration) tea.Cmd {
+	if d <= 0 {
+		d = 15 * time.Minute
+	}
+	return tea.Tick(d, func(t time.Time) tea.Msg { return tickMsg(t) })
+}
+
 // geocodeCmd performs a city search.
 //
 // The result carries its sequence number because responses can arrive

@@ -23,7 +23,7 @@ import (
 // reqID inside it would mark the first response stale forever. Only
 // Update's returned model replaces the program's.
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(m.spinner.Tick, kickRefreshCmd())
+	return tea.Batch(m.spinner.Tick, kickRefreshCmd(), tickCmd(m.cfg.RefreshInterval()))
 }
 
 // refreshCmd starts a fetch, returning the updated model and command.
@@ -112,6 +112,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case refreshKickMsg:
 		return m.refreshCmd()
+
+	case tickMsg:
+		next, fetch := m.refreshCmd()
+		m = next
+		// The reschedule is UNCONDITIONAL. refreshCmd returns a nil
+		// command whenever the fetch is suppressed — no cities yet, no
+		// provider, or a rate-limit backoff — and tying the next tick
+		// to that path would kill the ticker permanently the first
+		// time any of those happened.
+		cmds := []tea.Cmd{tickCmd(m.cfg.RefreshInterval())}
+		if fetch != nil {
+			cmds = append(cmds, fetch)
+		}
+		return m, tea.Batch(cmds...)
 
 	case debounceMsg:
 		// Only the newest debounce fires a request.
