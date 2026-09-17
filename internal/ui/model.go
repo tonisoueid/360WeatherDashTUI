@@ -122,6 +122,10 @@ type Model struct {
 	// frame is flushed.
 	startedAt time.Time
 
+	// nowFunc supplies the clock to date-labelled rendering. Injecting
+	// it keeps golden snapshots deterministic; nil means time.Now.
+	nowFunc func() time.Time
+
 	cfg     store.Config
 	keys    keyMap
 	help    help.Model
@@ -211,12 +215,20 @@ func New(cfg store.Config, cache store.Cache) Model {
 		sortMode:  parseSortMode(cfg.Sort),
 		startedAt: time.Now(),
 		cfg:       cfg,
-		keys:     defaultKeyMap(),
-		help:     help.New(),
-		spinner:  sp,
-		filter:   fi,
-		search:   si,
+		keys:      defaultKeyMap(),
+		help:      help.New(),
+		spinner:   sp,
+		filter:    fi,
+		search:    si,
 	}
+}
+
+// now returns the model's clock.
+func (m Model) now() time.Time {
+	if m.nowFunc != nil {
+		return m.nowFunc()
+	}
+	return time.Now()
 }
 
 // moveCity shifts the city cursor and clamps it.

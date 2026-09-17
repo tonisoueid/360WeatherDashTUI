@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 
@@ -59,7 +58,7 @@ func (m Model) renderGrid() string {
 // city's exact local date where precision matters.
 func (m Model) dayHeader(l layout) string {
 	th := newTheme()
-	now := time.Now()
+	now := m.now()
 
 	var b strings.Builder
 	b.WriteString(strings.Repeat(" ", l.labelW))

@@ -1,0 +1,24 @@
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                  [1;38;5;252mweatherdash[0m                                   
+                                                                                
+                      [38;5;250mAdd your first city to get started.[0m                       
+                                                                                
+                             [38;5;240ma   search for a city[0m                              
+                               [38;5;240m?   show all keys[0m                                
+                                    [38;5;240mq   quit[0m                                    
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ ↑↓ city · ←→ day · ⏎ zoom · a add · / filter · s sort · ? help    [38;5;240mno data yet[0m  

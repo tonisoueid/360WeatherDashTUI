@@ -1,0 +1,24 @@
+[1;38;5;252m Add a city                                                                     [0m
+────────────────────────────────────────────────────────────────────────────────
+  search: Paris                                                                 
+                                                                                
+[7m  Paris · Île-de-France · France  (48.85, 2.35)                                 [0m
+  Paris · Texas · United States  (33.66, -95.55)                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+[38;5;240m type to search · ↑↓ select · ⏎ add · esc cancel                                [0m
