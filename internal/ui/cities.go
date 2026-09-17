@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -63,6 +64,37 @@ func (m Model) deleteSelectedCity() Model {
 	m.clampCursor()
 	m.ensureCursorVisible()
 	m = m.syncConfigCities()
+	return m.rebuildView()
+}
+
+// errReorderWhileSorted explains why K and J are inert under a sort.
+var errReorderWhileSorted = errors.New("press s to return to manual order before reordering")
+
+// moveCityInOrder shifts the selected city within the SAVED order.
+//
+// This is one of only three operations that write to cfg.Cities (the
+// others being add and delete). It is refused outside manual sort by
+// its caller: reordering a temperature-sorted list is incoherent,
+// because the next re-sort would undo it.
+func (m Model) moveCityInOrder(delta int) Model {
+	city, ok := m.selectedCity()
+	if !ok {
+		return m
+	}
+
+	idx := -1
+	for i, c := range m.cfg.Cities {
+		if c.ID == city.ID {
+			idx = i
+			break
+		}
+	}
+	target := idx + delta
+	if idx < 0 || target < 0 || target >= len(m.cfg.Cities) {
+		return m
+	}
+
+	m.cfg.Cities[idx], m.cfg.Cities[target] = m.cfg.Cities[target], m.cfg.Cities[idx]
 	return m.rebuildView()
 }
 

@@ -227,6 +227,35 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.filtering = true
 		m.filter.Focus()
 		return m, textinput.Blink
+
+	case key.Matches(msg, m.keys.Units):
+		m.units = m.units.Toggle()
+		m.cfg.Units = m.units.String()
+		return m, saveConfigCmd(m.configPath, m.cfg)
+
+	case key.Matches(msg, m.keys.Density):
+		if m.density == densityCompact {
+			m.density = densityExpanded
+		} else {
+			m.density = densityCompact
+		}
+		m.cfg.Density = m.density.String()
+		m.ensureCursorVisible()
+		return m, saveConfigCmd(m.configPath, m.cfg)
+
+	case key.Matches(msg, m.keys.MoveUp), key.Matches(msg, m.keys.MoveDown):
+		if m.sortMode != sortManual {
+			// Say why rather than swallowing the key, so the user
+			// learns the rule instead of assuming the binding is broken.
+			m.lastErr = errReorderWhileSorted
+			return m, nil
+		}
+		delta := -1
+		if key.Matches(msg, m.keys.MoveDown) {
+			delta = 1
+		}
+		m = m.moveCityInOrder(delta)
+		return m, saveConfigCmd(m.configPath, m.cfg)
 	}
 	return m, nil
 }
@@ -250,6 +279,10 @@ func (m Model) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.moveDay(1)
 	case key.Matches(msg, m.keys.Refresh):
 		return m.refreshCmd()
+	case key.Matches(msg, m.keys.Units):
+		m.units = m.units.Toggle()
+		m.cfg.Units = m.units.String()
+		return m, saveConfigCmd(m.configPath, m.cfg)
 	}
 	return m, nil
 }
