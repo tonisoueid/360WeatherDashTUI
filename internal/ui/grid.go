@@ -18,6 +18,12 @@ import (
 // visible at any scroll position — with twenty cities, a header that
 // scrolls away makes the grid unreadable.
 func (m Model) renderGrid() string {
+	// No rows to show is either a first run or a filter that matched
+	// nothing — two situations that deserve different words.
+	if len(m.cities) == 0 {
+		return m.renderEmpty()
+	}
+
 	l := m.layout()
 
 	lines := make([]string, 0, m.h)
