@@ -134,6 +134,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case configSavedMsg:
+		if msg.err != nil {
+			m.lastErr = msg.err
+		}
+		return m, nil
+
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	}
@@ -162,6 +168,10 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.confirmDelete && !key.Matches(msg, m.keys.Delete) {
+		m.confirmDelete = false
+	}
+
 	switch {
 	case key.Matches(msg, m.keys.Up):
 		m.moveCity(-1)
@@ -189,6 +199,17 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.searchSel = 0
 		m.searchErr = nil
 		return m, textinput.Blink
+
+	case key.Matches(msg, m.keys.Delete):
+		if !m.confirmDelete {
+			// Deleting a city is cheap to redo but annoying to
+			// discover, so it takes two presses rather than one.
+			m.confirmDelete = true
+			return m, nil
+		}
+		m.confirmDelete = false
+		m = m.deleteSelectedCity()
+		return m, saveConfigCmd(m.configPath, m.cfg)
 	}
 	return m, nil
 }

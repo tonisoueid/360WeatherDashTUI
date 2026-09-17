@@ -34,6 +34,10 @@ func (m Model) footer(width int) string {
 
 	var status string
 	switch {
+	case m.confirmDelete:
+		if c, ok := m.selectedCity(); ok {
+			status = th.warn.Render("press d again to delete " + c.Name + " · esc cancels")
+		}
 	case m.loading:
 		status = m.spinner.View() + " refreshing…"
 	case m.lastErr != nil && !m.lastOK.IsZero():

@@ -87,15 +87,28 @@ func (m Model) handleAddCityKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmd, debounceCmd(m.search.Value(), m.searchSeq))
 }
 
-// commitSelectedPlace adds the highlighted result. Task 28 adds
-// duplicate detection and config persistence.
+// commitSelectedPlace adds the highlighted result, persists it, and
+// triggers a refresh so the new row fills in immediately.
 func (m Model) commitSelectedPlace() (tea.Model, tea.Cmd) {
 	if m.searchSel < 0 || m.searchSel >= len(m.searchResults) {
 		return m, nil
 	}
-	m.cities = append(m.cities, m.searchResults[m.searchSel].ToCity())
+
+	next, err := m.addCity(m.searchResults[m.searchSel].ToCity())
+	if err != nil {
+		// Stay in the modal so the user can pick a different result.
+		m.searchErr = err
+		return m, nil
+	}
+	m = next
+
 	m.screen = screenGrid
 	m.search.Blur()
+	m.search.SetValue("")
 	m.searchResults = nil
-	return m.refreshCmd()
+	m.searchSel = 0
+	m.searchErr = nil
+
+	m, fetch := m.refreshCmd()
+	return m, tea.Batch(saveConfigCmd(m.configPath, m.cfg), fetch)
 }

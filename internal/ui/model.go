@@ -95,6 +95,10 @@ type Model struct {
 	lastErr    error
 	backoffTil time.Time
 
+	// confirmDelete arms the two-press delete. Deleting a city is cheap
+	// to redo but annoying to discover, so it takes two presses.
+	confirmDelete bool
+
 	cfg     store.Config
 	keys    keyMap
 	help    help.Model
