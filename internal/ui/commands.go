@@ -52,6 +52,14 @@ func fetchCmd(p weather.Provider, cities []weather.City, reqID int) tea.Cmd {
 	}
 }
 
+// kickRefreshCmd posts the message that starts the first fetch.
+//
+// See refreshKickMsg for why the initial refresh cannot be started
+// directly inside Init.
+func kickRefreshCmd() tea.Cmd {
+	return func() tea.Msg { return refreshKickMsg{} }
+}
+
 // saveCacheCmd persists forecasts in the background.
 //
 // The error is swallowed on purpose: a cache that fails to write costs

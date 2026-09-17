@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/tsoueid/weatherdash/internal/weather"
 )
 
@@ -153,5 +155,58 @@ func TestRefreshCmdWithNoCities(t *testing.T) {
 	_, cmd := m.refreshCmd()
 	if cmd != nil {
 		t.Error("refresh with no cities must not issue a request")
+	}
+}
+
+// The first fetch must be kicked off as a message handled by Update:
+// Init's receiver is a copy the program discards, so starting the
+// fetch there would leave the model's reqID at zero and the first
+// response would be discarded as stale forever.
+func TestKickStartsRefreshThroughUpdate(t *testing.T) {
+	m := testModel(t, 2)
+	m = m.WithDeps(Deps{Provider: &fakeProvider{}})
+
+	kickMsg := kickRefreshCmd()()
+	if _, ok := kickMsg.(refreshKickMsg); !ok {
+		t.Fatal("kickRefreshCmd must produce a refreshKickMsg")
+	}
+
+	tm, cmd := m.Update(refreshKickMsg{})
+	kicked := tm.(Model)
+	if !kicked.loading || kicked.reqID != m.reqID+1 || cmd == nil {
+		t.Errorf("after kick: loading=%v reqID=%d cmd=%v; want loading, +1, non-nil",
+			kicked.loading, kicked.reqID, cmd)
+	}
+}
+
+// End-to-end over a real event loop: with no keypresses at all, the
+// program's final model must hold the provider's data. This is the
+// regression test for the Init-value-receiver trap.
+func TestStartupFetchSurvivesTheEventLoop(t *testing.T) {
+	cfg := defaultTestConfig()
+	cfg.Cities = []weather.City{{ID: "a", Name: "A", TZ: "UTC"}}
+	m := New(cfg, emptyTestCache()).WithDeps(Deps{Provider: &fakeProvider{}})
+
+	p := tea.NewProgram(m, tea.WithInput(nil), tea.WithoutRenderer())
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		p.Send(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	}()
+
+	final, err := p.Run()
+	if err != nil {
+		t.Fatalf("program run: %v", err)
+	}
+
+	fm := final.(Model)
+	f, ok := fm.data["a"]
+	if !ok || len(f.Days) == 0 {
+		t.Fatalf("startup fetch never landed in the model: data=%v", fm.data)
+	}
+	if f.Days[0].HiC != 20 {
+		t.Errorf("HiC = %v, want 20 from the fake provider", f.Days[0].HiC)
+	}
+	if fm.lastOK.IsZero() || fm.loading {
+		t.Errorf("lastOK zero or still loading after fetch: %v %v", fm.lastOK, fm.loading)
 	}
 }

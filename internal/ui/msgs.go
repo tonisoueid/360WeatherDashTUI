@@ -23,6 +23,16 @@ type forecastsMsg struct {
 // tickMsg fires the auto-refresh (Task 33).
 type tickMsg time.Time
 
+// refreshKickMsg tells Update to start a fetch.
+//
+// Init cannot start one itself: it has a value receiver, so the model
+// mutation inside refreshCmd (consuming a reqID, setting loading) would
+// land on a copy that Bubble Tea throws away — and the first response
+// would then be discarded as stale forever. Routing the kick through
+// Update is the only place a returned model actually replaces the
+// program's.
+type refreshKickMsg struct{}
+
 // geocodeMsg carries city-search results (Task 26).
 type geocodeMsg struct {
 	seq     int

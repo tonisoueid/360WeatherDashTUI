@@ -15,14 +15,13 @@ import (
 // The model already holds cached forecasts when this runs, so View()
 // draws a populated grid before the request is even sent. That is what
 // makes startup feel instant rather than one network round-trip.
+//
+// The fetch itself is kicked off as a message rather than launched
+// here: Init's receiver is a copy the program discards, so consuming a
+// reqID inside it would mark the first response stale forever. Only
+// Update's returned model replaces the program's.
 func (m Model) Init() tea.Cmd {
-	next, fetch := m.refreshCmd()
-	m = next
-	cmds := []tea.Cmd{m.spinner.Tick}
-	if fetch != nil {
-		cmds = append(cmds, fetch)
-	}
-	return tea.Batch(cmds...)
+	return tea.Batch(m.spinner.Tick, kickRefreshCmd())
 }
 
 // refreshCmd starts a fetch, returning the updated model and command.
@@ -108,6 +107,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case forecastsMsg:
 		m = m.applyForecasts(msg)
 		return m, saveCacheCmd(m.cachePath, m.data)
+
+	case refreshKickMsg:
+		return m.refreshCmd()
 
 	case tea.KeyMsg:
 		return m.handleKey(msg)
