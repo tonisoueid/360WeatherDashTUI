@@ -130,12 +130,43 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch m.screen {
 	case screenGrid:
 		return m.handleGridKey(msg)
+	case screenDetail:
+		return m.handleDetailKey(msg)
 	}
 	return m, nil
 }
 
 func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
+	case key.Matches(msg, m.keys.Up):
+		m.moveCity(-1)
+		m.ensureCursorVisible()
+	case key.Matches(msg, m.keys.Down):
+		m.moveCity(1)
+		m.ensureCursorVisible()
+	case key.Matches(msg, m.keys.Left):
+		m.moveDay(-1)
+	case key.Matches(msg, m.keys.Right):
+		m.moveDay(1)
+	case key.Matches(msg, m.keys.Refresh):
+		return m.refreshCmd()
+	case key.Matches(msg, m.keys.Enter):
+		// Nothing to zoom into with no cities; stay put rather than
+		// opening an empty detail screen.
+		if len(m.cities) > 0 {
+			m.screen = screenDetail
+		}
+	}
+	return m, nil
+}
+
+// handleDetailKey moves the SAME cursor the grid uses, so escaping
+// returns to exactly the cell the user zoomed out of and panning inside
+// the detail view needs no round trip through the grid.
+func (m Model) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Back):
+		m.screen = screenGrid
 	case key.Matches(msg, m.keys.Up):
 		m.moveCity(-1)
 		m.ensureCursorVisible()

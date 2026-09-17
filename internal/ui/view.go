@@ -29,6 +29,8 @@ func (m Model) View() string {
 	switch m.screen {
 	case screenGrid:
 		return m.renderGrid()
+	case screenDetail:
+		return m.renderDetail()
 	}
 	return m.renderGrid()
 }
