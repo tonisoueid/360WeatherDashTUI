@@ -1,0 +1,66 @@
+[
+  {
+    "latitude": 48.86, "longitude": 2.35,
+    "timezone": "Europe/Paris", "utc_offset_seconds": 7200,
+    "current": {
+      "time": "2026-09-17T14:00", "temperature_2m": 18.4,
+      "apparent_temperature": 16.2, "weather_code": 3,
+      "wind_speed_10m": 12.0, "wind_direction_10m": 315,
+      "relative_humidity_2m": 62
+    },
+    "hourly": {
+      "time": ["2026-09-17T00:00","2026-09-17T01:00","2026-09-18T00:00","2026-09-18T01:00"],
+      "temperature_2m": [12.0, 11.5, 13.0, 12.5],
+      "apparent_temperature": [10.0, 9.5, 11.0, 10.5],
+      "precipitation_probability": [10, 20, 80, 90],
+      "precipitation": [0.0, 0.1, 2.5, 3.0],
+      "weather_code": [3, 3, 61, 63],
+      "wind_speed_10m": [8.0, 9.0, 15.0, 18.0],
+      "wind_direction_10m": [270, 280, 200, 190]
+    },
+    "daily": {
+      "time": ["2026-09-17","2026-09-18"],
+      "weather_code": [3, 63],
+      "temperature_2m_max": [18.0, 15.0],
+      "temperature_2m_min": [12.0, 11.0],
+      "precipitation_sum": [0.1, 12.0],
+      "precipitation_probability_max": [20, 90],
+      "wind_speed_10m_max": [22.0, 28.0],
+      "uv_index_max": [4.0, 2.0],
+      "sunrise": ["2026-09-17T07:12","2026-09-18T07:14"],
+      "sunset": ["2026-09-17T19:48","2026-09-18T19:46"]
+    }
+  },
+  {
+    "latitude": 35.68, "longitude": 139.65,
+    "timezone": "Asia/Tokyo", "utc_offset_seconds": 32400,
+    "current": {
+      "time": "2026-09-17T21:00", "temperature_2m": 11.0,
+      "apparent_temperature": 9.0, "weather_code": 61,
+      "wind_speed_10m": 6.0, "wind_direction_10m": 90,
+      "relative_humidity_2m": 88
+    },
+    "hourly": {
+      "time": ["2026-09-17T00:00","2026-09-17T01:00","2026-09-18T00:00","2026-09-18T01:00"],
+      "temperature_2m": [9.0, 8.5, 10.0, 9.5],
+      "apparent_temperature": [7.0, 6.5, 8.0, 7.5],
+      "precipitation_probability": [70, null, 60, 55],
+      "precipitation": [1.0, null, 0.5, 0.2],
+      "weather_code": [61, 61, 61, 3],
+      "wind_speed_10m": [5.0, 6.0, 7.0, 6.5],
+      "wind_direction_10m": [80, 90, 100, 110]
+    },
+    "daily": {
+      "time": ["2026-09-17","2026-09-18"],
+      "weather_code": [61, 61],
+      "temperature_2m_max": [11.0, 12.0],
+      "temperature_2m_min": [9.0, 9.5],
+      "precipitation_sum": [8.0, 6.0],
+      "precipitation_probability_max": [70, 60],
+      "wind_speed_10m_max": [12.0, 14.0],
+      "uv_index_max": [2.0, 3.0],
+      "sunrise": ["2026-09-17T05:30","2026-09-18T05:31"],
+      "sunset": ["2026-09-17T17:45","2026-09-18T17:43"]
+    }
+  }
+]
