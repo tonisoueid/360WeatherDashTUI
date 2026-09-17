@@ -1,19 +1,30 @@
 package ui
 
-import "testing"
+import (
+	"testing"
+	"time"
+
+	// The timezone sorts must resolve IANA zones; embedding tzdata
+	// keeps the test binary hermetic on systems without /usr/share/zoneinfo.
+	_ "time/tzdata"
+
+	"github.com/tsoueid/weatherdash/internal/store"
+	"github.com/tsoueid/weatherdash/internal/weather"
+)
 
 func TestSortModeCycles(t *testing.T) {
+	const modes = 9
 	seen := map[sortMode]bool{}
 	s := sortManual
-	for i := 0; i < 4; i++ {
+	for i := 0; i < modes; i++ {
 		seen[s] = true
 		s = s.Next()
 	}
-	if len(seen) != 4 {
-		t.Errorf("cycling visited %d modes, want 4", len(seen))
+	if len(seen) != modes {
+		t.Errorf("cycling visited %d modes, want %d", len(seen), modes)
 	}
 	if s != sortManual {
-		t.Errorf("cycling four times ended on %v, want back at sortManual", s)
+		t.Errorf("cycling %d times ended on %v, want back at sortManual", modes, s)
 	}
 }
 
@@ -106,7 +117,8 @@ func TestSortPutsCitiesWithoutDataLast(t *testing.T) {
 }
 
 func TestParseSortModeRoundTrip(t *testing.T) {
-	for _, s := range []sortMode{sortManual, sortWarmest, sortColdest, sortDriest} {
+	for _, s := range []sortMode{sortManual, sortWarmest, sortColdest, sortDriest,
+		sortAZ, sortZA, sortEast, sortWest, sortGMT} {
 		if got := parseSortMode(s.String()); got != s {
 			t.Errorf("parseSortMode(%q) = %v, want %v", s.String(), got, s)
 		}
@@ -114,4 +126,123 @@ func TestParseSortModeRoundTrip(t *testing.T) {
 	if got := parseSortMode("nonsense"); got != sortManual {
 		t.Errorf("unknown sort = %v, want sortManual", got)
 	}
+}
+
+func TestSortAlphabeticalAZ(t *testing.T) {
+	m := testModel(t, 5) // Paris, Beirut, Tokyo, Oslo, Lisbon
+	m.sortMode = sortAZ
+	m = m.rebuildView()
+
+	want := []string{"Beirut", "Lisbon", "Oslo", "Paris", "Tokyo"}
+	for i, name := range want {
+		if m.cities[i].Name != name {
+			t.Fatalf("A-Z order = %v, want %v", cityNames(m.cities), want)
+		}
+	}
+}
+
+func TestSortAlphabeticalZA(t *testing.T) {
+	m := testModel(t, 5)
+	m.sortMode = sortZA
+	m = m.rebuildView()
+
+	want := []string{"Tokyo", "Paris", "Oslo", "Lisbon", "Beirut"}
+	for i, name := range want {
+		if m.cities[i].Name != name {
+			t.Fatalf("Z-A order = %v, want %v", cityNames(m.cities), want)
+		}
+	}
+}
+
+// Alphabetical order must not exile a city without forecast data: the
+// name ordering does not depend on what has fetched.
+func TestSortAlphabeticalIgnoresDataAvailability(t *testing.T) {
+	m := testModel(t, 3)
+	delete(m.data, m.cities[1].ID) // Beirut has no data
+
+	m.sortMode = sortAZ
+	m = m.rebuildView()
+
+	if m.cities[0].Name != "Beirut" {
+		t.Errorf("Beirut is at index 0's place = %q; data-less cities must sort by name, not last",
+			m.cities[0].Name)
+	}
+}
+
+// tzModel spans the globe with the clock pinned, so every zone's DST
+// state is fixed regardless of when the test runs.
+func tzModel(t *testing.T) Model {
+	t.Helper()
+	zones := []struct{ name, tz string }{
+		{"Tokyo", "Asia/Tokyo"},               // +9
+		{"Paris", "Europe/Paris"},             // +2 (CEST in September)
+		{"Accra", "Africa/Accra"},             // 0, no DST
+		{"NewYork", "America/New_York"},       // -4 (EDT)
+		{"LosAngeles", "America/Los_Angeles"}, // -7 (PDT)
+	}
+
+	cfg := store.DefaultConfig()
+	cache := store.NewCache()
+	for _, z := range zones {
+		cfg.Cities = append(cfg.Cities, weather.City{
+			ID: z.name, Name: z.name, TZ: z.tz, Country: "X",
+		})
+		cache.Forecasts[z.name] = weather.Forecast{
+			CityID: z.name, Days: []weather.Day{{HiC: 10}},
+		}
+	}
+
+	m := New(cfg, cache)
+	m.nowFunc = func() time.Time {
+		return time.Date(2026, 9, 17, 12, 0, 0, 0, time.UTC)
+	}
+	return m
+}
+
+func TestSortTimezoneEastmostFirst(t *testing.T) {
+	m := tzModel(t)
+	m.sortMode = sortEast
+	m = m.rebuildView()
+
+	want := []string{"Tokyo", "Paris", "Accra", "NewYork", "LosAngeles"}
+	for i, name := range want {
+		if m.cities[i].Name != name {
+			t.Fatalf("eastmost-first order = %v, want %v", cityNames(m.cities), want)
+		}
+	}
+}
+
+func TestSortTimezoneWestmostFirst(t *testing.T) {
+	m := tzModel(t)
+	m.sortMode = sortWest
+	m = m.rebuildView()
+
+	want := []string{"LosAngeles", "NewYork", "Accra", "Paris", "Tokyo"}
+	for i, name := range want {
+		if m.cities[i].Name != name {
+			t.Fatalf("westmost-first order = %v, want %v", cityNames(m.cities), want)
+		}
+	}
+}
+
+// GMT first means closest to UTC+0: 0, then ±2, ±4, … by distance.
+func TestSortTimezoneGMTFirst(t *testing.T) {
+	m := tzModel(t)
+	m.sortMode = sortGMT
+	m = m.rebuildView()
+
+	want := []string{"Accra", "Paris", "NewYork", "LosAngeles", "Tokyo"}
+	for i, name := range want {
+		if m.cities[i].Name != name {
+			t.Fatalf("GMT-first order = %v, want %v", cityNames(m.cities), want)
+		}
+	}
+}
+
+func cityNames(cities []weather.City) []string {
+	names := make([]string, len(cities))
+	for i, c := range cities {
+		names[i] = c.Name
+	}
+	return names
 }

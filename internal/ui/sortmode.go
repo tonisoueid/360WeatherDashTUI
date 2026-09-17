@@ -3,6 +3,7 @@ package ui
 import (
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/tsoueid/weatherdash/internal/weather"
 )
@@ -16,6 +17,11 @@ const (
 	sortWarmest
 	sortColdest
 	sortDriest
+	sortAZ
+	sortZA
+	sortEast
+	sortWest
+	sortGMT
 )
 
 func (s sortMode) String() string {
@@ -26,6 +32,16 @@ func (s sortMode) String() string {
 		return "coldest"
 	case sortDriest:
 		return "driest"
+	case sortAZ:
+		return "az"
+	case sortZA:
+		return "za"
+	case sortEast:
+		return "east"
+	case sortWest:
+		return "west"
+	case sortGMT:
+		return "gmt"
 	default:
 		return "manual"
 	}
@@ -39,6 +55,16 @@ func parseSortMode(s string) sortMode {
 		return sortColdest
 	case "driest":
 		return sortDriest
+	case "az":
+		return sortAZ
+	case "za":
+		return sortZA
+	case "east":
+		return sortEast
+	case "west":
+		return sortWest
+	case "gmt":
+		return sortGMT
 	default:
 		return sortManual
 	}
@@ -46,7 +72,7 @@ func parseSortMode(s string) sortMode {
 
 // Next cycles through the modes.
 func (s sortMode) Next() sortMode {
-	if s == sortDriest {
+	if s == sortGMT {
 		return sortManual
 	}
 	return s + 1
@@ -101,13 +127,60 @@ func (m Model) rebuildView() Model {
 	return m
 }
 
+// tzOffset returns the city's UTC offset in seconds at the model's
+// clock. Going through now() keeps the offset — and therefore the
+// timezone sorts — deterministic under an injected clock, with DST
+// resolved as of "now". An invalid zone counts as UTC: a bad string
+// should order a city mid-list, not crash the render.
+func (m Model) tzOffset(c weather.City) int {
+	loc, err := time.LoadLocation(c.TZ)
+	if err != nil {
+		return 0
+	}
+	_, off := m.now().In(loc).Zone()
+	return off
+}
+
+// absSec is |seconds|, for the GMT-first distance comparison.
+func absSec(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+
 // lessBy ranks two cities under the active mode.
 //
 // All ranking keys are computed over the WHOLE forecast window, not the
 // selected day: "driest" means driest week, which is the question a
-// planning view is asking. Cities with no data rank last in every mode,
-// so an unfetched row never displaces a real answer from the top.
+// planning view is asking. Cities with no data rank last in every
+// data-based mode, so an unfetched row never displaces a real answer
+// from the top; the name- and timezone-based modes do not consult
+// forecasts at all, so every city ranks on equal terms there.
 func (m Model) lessBy(mode sortMode, a, b weather.City) bool {
+	switch mode {
+	case sortAZ:
+		return strings.ToLower(a.Name) < strings.ToLower(b.Name)
+	case sortZA:
+		return strings.ToLower(a.Name) > strings.ToLower(b.Name)
+	}
+
+	oa, ob := m.tzOffset(a), m.tzOffset(b)
+	switch mode {
+	case sortEast:
+		if oa != ob {
+			return oa > ob
+		}
+	case sortWest:
+		if oa != ob {
+			return oa < ob
+		}
+	case sortGMT:
+		if absSec(oa) != absSec(ob) {
+			return absSec(oa) < absSec(ob)
+		}
+	}
+
 	fa, oka := m.data[a.ID]
 	fb, okb := m.data[b.ID]
 
