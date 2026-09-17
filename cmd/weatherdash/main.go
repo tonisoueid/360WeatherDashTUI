@@ -13,9 +13,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/tsoueid/weatherdash/internal/geocode"
 	"github.com/tsoueid/weatherdash/internal/store"
 	"github.com/tsoueid/weatherdash/internal/ui"
 	"github.com/tsoueid/weatherdash/internal/version"
+	"github.com/tsoueid/weatherdash/internal/weather"
 )
 
 func main() {
@@ -65,5 +67,11 @@ func buildModel(demo bool) (ui.Model, error) {
 
 	// LoadCache never fails: a missing or corrupt cache is an empty
 	// one, and the first fetch repopulates it.
-	return ui.New(cfg, store.LoadCache(cachePath)), nil
+	model := ui.New(cfg, store.LoadCache(cachePath))
+	return model.WithDeps(ui.Deps{
+		Provider:   weather.NewClient(cfg.ForecastDays),
+		Geocoder:   geocode.NewClient(),
+		ConfigPath: cfgPath,
+		CachePath:  cachePath,
+	}), nil
 }

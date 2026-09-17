@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/tsoueid/weatherdash/internal/store"
 	"github.com/tsoueid/weatherdash/internal/weather"
 )
 
@@ -48,5 +49,27 @@ func fetchCmd(p weather.Provider, cities []weather.City, reqID int) tea.Cmd {
 			forecasts: forecasts,
 			err:       err,
 		}
+	}
+}
+
+// saveCacheCmd persists forecasts in the background.
+//
+// The error is swallowed on purpose: a cache that fails to write costs
+// one slow startup and nothing else, so interrupting the user with it
+// would be noise. Config write failures, which lose saved cities, are
+// surfaced — see Task 28.
+func saveCacheCmd(path string, data map[string]weather.Forecast) tea.Cmd {
+	if path == "" || len(data) == 0 {
+		return nil
+	}
+	snapshot := make(map[string]weather.Forecast, len(data))
+	for k, v := range data {
+		snapshot[k] = v
+	}
+	return func() tea.Msg {
+		c := store.NewCache()
+		c.Forecasts = snapshot
+		_ = store.SaveCache(path, c)
+		return nil
 	}
 }
