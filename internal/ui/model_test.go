@@ -40,6 +40,9 @@ func testModel(t *testing.T, n int) Model {
 	return m
 }
 
+func defaultTestConfig() store.Config { return store.DefaultConfig() }
+func emptyTestCache() store.Cache     { return store.NewCache() }
+
 func TestNewLoadsCitiesAndCache(t *testing.T) {
 	m := testModel(t, 3)
 	if len(m.cities) != 3 {
