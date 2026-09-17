@@ -11,6 +11,8 @@ import (
 
 var errTest = errors.New("search failed")
 
+func timeNow() time.Time { return time.Now() }
+
 // testModel builds a model with n cities, each with 7 days of data.
 func testModel(t *testing.T, n int) Model {
 	t.Helper()

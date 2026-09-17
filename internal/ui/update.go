@@ -165,7 +165,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKey routes a keypress to the active screen. Phases 6 to 8 add
 // the other screens' branches.
+// noticeGrace is how long after startup the notice ignores key events.
+// Terminals answer the colour queries emitted during the first render
+// with a burst of key-shaped sequences; treating those as a keypress
+// would dismiss the notice before the user has seen a single frame.
+const noticeGrace = time.Second
+
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Any keypress acknowledges the startup notice — once the terminal's
+	// own startup chatter has died down.
+	if time.Since(m.startedAt) > noticeGrace {
+		m.notice = ""
+	}
+
 	if key.Matches(msg, m.keys.Quit) {
 		return m, tea.Quit
 	}

@@ -55,7 +55,7 @@ func buildModel(demo bool) (ui.Model, error) {
 	if err != nil {
 		return ui.Model{}, err
 	}
-	cfg, _, err := store.LoadConfig(cfgPath)
+	cfg, rec, err := store.LoadConfig(cfgPath)
 	if err != nil {
 		return ui.Model{}, err
 	}
@@ -67,11 +67,19 @@ func buildModel(demo bool) (ui.Model, error) {
 
 	// LoadCache never fails: a missing or corrupt cache is an empty
 	// one, and the first fetch repopulates it.
-	model := ui.New(cfg, store.LoadCache(cachePath))
-	return model.WithDeps(ui.Deps{
+	model := ui.New(cfg, store.LoadCache(cachePath)).WithDeps(ui.Deps{
 		Provider:   weather.NewClient(cfg.ForecastDays),
 		Geocoder:   geocode.NewClient(),
 		ConfigPath: cfgPath,
 		CachePath:  cachePath,
-	}), nil
+	})
+
+	if rec.Recovered {
+		msg := "config was unreadable and has been reset"
+		if rec.BackupPath != "" {
+			msg += "; the old file is at " + rec.BackupPath
+		}
+		model = model.WithNotice(msg)
+	}
+	return model, nil
 }

@@ -112,6 +112,16 @@ type Model struct {
 	// returns to it instead of always landing on the grid.
 	helpReturn screen
 
+	// notice is a one-off startup message (config recovery) shown in
+	// the footer until the first keypress.
+	notice string
+
+	// startedAt anchors the notice grace window. A terminal answering
+	// the colour queries sent at startup emits a burst of key-shaped
+	// events that would otherwise dismiss the notice before the first
+	// frame is flushed.
+	startedAt time.Time
+
 	cfg     store.Config
 	keys    keyMap
 	help    help.Model
@@ -145,6 +155,13 @@ func (m Model) WithDeps(d Deps) Model {
 	m.geocoder = d.Geocoder
 	m.configPath = d.ConfigPath
 	m.cachePath = d.CachePath
+	return m
+}
+
+// WithNotice attaches a one-off startup message shown in the footer
+// until the first keypress.
+func (m Model) WithNotice(text string) Model {
+	m.notice = text
 	return m
 }
 
@@ -184,15 +201,16 @@ func New(cfg store.Config, cache store.Cache) Model {
 	copy(cities, cfg.Cities)
 
 	return Model{
-		screen:   screenGrid,
-		cities:   cities,
-		data:     data,
-		days:     cfg.ForecastDays,
-		density:  parseDensity(cfg.Density),
-		units:    u,
-		icons:    icons,
-		sortMode: parseSortMode(cfg.Sort),
-		cfg:      cfg,
+		screen:    screenGrid,
+		cities:    cities,
+		data:      data,
+		days:      cfg.ForecastDays,
+		density:   parseDensity(cfg.Density),
+		units:     u,
+		icons:     icons,
+		sortMode:  parseSortMode(cfg.Sort),
+		startedAt: time.Now(),
+		cfg:       cfg,
 		keys:     defaultKeyMap(),
 		help:     help.New(),
 		spinner:  sp,
