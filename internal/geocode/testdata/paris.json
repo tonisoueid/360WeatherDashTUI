@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "id": 2988507, "name": "Paris",
+      "latitude": 48.85341, "longitude": 2.3488,
+      "country": "France", "country_code": "FR",
+      "admin1": "Île-de-France", "timezone": "Europe/Paris",
+      "population": 2138551
+    },
+    {
+      "id": 4717560, "name": "Paris",
+      "latitude": 33.66094, "longitude": -95.55551,
+      "country": "United States", "country_code": "US",
+      "admin1": "Texas", "timezone": "America/Chicago",
+      "population": 25171
+    }
+  ]
+}
