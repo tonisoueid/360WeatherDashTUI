@@ -62,3 +62,7 @@ func tempColor(c float64) lipgloss.Color {
 	}
 	return tempRamp[len(tempRamp)-1].color
 }
+
+// lipglossWidth is a local alias so callers do not each import lipgloss
+// just to measure a string.
+func lipglossWidth(s string) int { return lipgloss.Width(s) }

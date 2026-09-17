@@ -19,7 +19,6 @@ import (
 // scrolls away makes the grid unreadable.
 func (m Model) renderGrid() string {
 	l := m.layout()
-	th := newTheme()
 
 	lines := make([]string, 0, m.h)
 	lines = append(lines, m.dayHeader(l))
@@ -38,14 +37,8 @@ func (m Model) renderGrid() string {
 		used++
 	}
 
-	lines = append(lines, th.dim.Render(widgets.Pad(m.footerHint(), m.w)))
+	lines = append(lines, m.footer(m.w))
 	return strings.Join(lines[:m.h], "\n")
-}
-
-// footerHint is the one-line key reminder. Task 23 replaces this with a
-// version that also reports data freshness.
-func (m Model) footerHint() string {
-	return " ↑↓ city · ←→ day · ⏎ zoom · a add · / filter · s sort · r refresh · ? help"
 }
 
 // dayHeader renders the pinned column labels.
