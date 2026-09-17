@@ -1,12 +1,15 @@
 package ui
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/tsoueid/weatherdash/internal/store"
 	"github.com/tsoueid/weatherdash/internal/weather"
 )
+
+var errTest = errors.New("search failed")
 
 // testModel builds a model with n cities, each with 7 days of data.
 func testModel(t *testing.T, n int) Model {

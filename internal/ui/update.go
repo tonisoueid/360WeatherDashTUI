@@ -2,9 +2,11 @@ package ui
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/tsoueid/weatherdash/internal/weather"
@@ -111,6 +113,27 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case refreshKickMsg:
 		return m.refreshCmd()
 
+	case debounceMsg:
+		// Only the newest debounce fires a request.
+		if msg.seq != m.searchSeq || strings.TrimSpace(msg.query) == "" {
+			return m, nil
+		}
+		m.searching = true
+		return m, geocodeCmd(m.geocoder, msg.query, msg.seq)
+
+	case geocodeMsg:
+		// Responses can arrive out of order; ignore superseded ones.
+		if msg.seq != m.searchSeq {
+			return m, nil
+		}
+		m.searching = false
+		m.searchErr = msg.err
+		if msg.err == nil {
+			m.searchResults = msg.results
+			m.searchSel = 0
+		}
+		return m, nil
+
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	}
@@ -132,6 +155,8 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleGridKey(msg)
 	case screenDetail:
 		return m.handleDetailKey(msg)
+	case screenAddCity:
+		return m.handleAddCityKey(msg)
 	}
 	return m, nil
 }
@@ -156,6 +181,14 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if len(m.cities) > 0 {
 			m.screen = screenDetail
 		}
+	case key.Matches(msg, m.keys.Add):
+		m.screen = screenAddCity
+		m.search.SetValue("")
+		m.search.Focus()
+		m.searchResults = nil
+		m.searchSel = 0
+		m.searchErr = nil
+		return m, textinput.Blink
 	}
 	return m, nil
 }

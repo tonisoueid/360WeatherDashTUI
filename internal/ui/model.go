@@ -100,6 +100,16 @@ type Model struct {
 	help    help.Model
 	spinner spinner.Model
 	filter  textinput.Model
+
+	// Add-city modal state. searchSeq is the sequence discipline for
+	// debounced searches: every keystroke bumps it, and any debounce or
+	// response carrying an older number is ignored.
+	search        textinput.Model
+	searchSeq     int
+	searchResults []geocode.Place
+	searchSel     int
+	searchErr     error
+	searching     bool
 }
 
 // Deps are the collaborators the model needs to do real work. They are
@@ -143,6 +153,11 @@ func New(cfg store.Config, cache store.Cache) Model {
 	fi.Placeholder = "filter cities"
 	fi.Prompt = "/"
 
+	si := textinput.New()
+	si.Placeholder = "city name"
+	si.Prompt = "  search: "
+	si.CharLimit = 64
+
 	data := make(map[string]weather.Forecast, len(cache.Forecasts))
 	for id, f := range cache.Forecasts {
 		data[id] = f
@@ -164,6 +179,7 @@ func New(cfg store.Config, cache store.Cache) Model {
 		help:    help.New(),
 		spinner: sp,
 		filter:  fi,
+		search:  si,
 	}
 }
 
