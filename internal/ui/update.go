@@ -156,6 +156,12 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	}
 
+	// While the filter input has the keyboard, every key goes to it;
+	// the grid stays on screen underneath.
+	if m.filtering && m.screen == screenGrid {
+		return m.handleFilterKey(msg)
+	}
+
 	switch m.screen {
 	case screenGrid:
 		return m.handleGridKey(msg)
@@ -216,6 +222,11 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.cfg.Sort = m.sortMode.String()
 		m = m.rebuildView()
 		return m, saveConfigCmd(m.configPath, m.cfg)
+
+	case key.Matches(msg, m.keys.Filter):
+		m.filtering = true
+		m.filter.Focus()
+		return m, textinput.Blink
 	}
 	return m, nil
 }

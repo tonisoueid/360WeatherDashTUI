@@ -135,7 +135,3 @@ func (m Model) lessBy(mode sortMode, a, b weather.City) bool {
 	// Name is the tiebreak so the order is stable across refreshes.
 	return a.Name < b.Name
 }
-
-// matchesFilter is defined in filter.go (Task 30). Until then it is a
-// pass-through, declared here so rebuildView compiles.
-func matchesFilter(c weather.City, q string) bool { return true }

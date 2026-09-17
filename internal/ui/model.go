@@ -105,6 +105,9 @@ type Model struct {
 	// to redo but annoying to discover, so it takes two presses.
 	confirmDelete bool
 
+	// filtering is true while the filter input has the keyboard.
+	filtering bool
+
 	cfg     store.Config
 	keys    keyMap
 	help    help.Model

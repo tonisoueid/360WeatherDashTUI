@@ -23,6 +23,9 @@ func (m Model) renderGrid() string {
 	lines := make([]string, 0, m.h)
 	lines = append(lines, m.dayHeader(l))
 	lines = append(lines, widgets.Pad(strings.Repeat("─", m.w), m.w))
+	if m.filtering || m.filterQuery != "" {
+		lines[1] = widgets.Pad(m.filter.View(), m.w)
+	}
 
 	body := 0
 	for i := m.scroll; i < len(m.cities) && body < l.rows; i++ {
