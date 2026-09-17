@@ -80,6 +80,12 @@ type Model struct {
 	units   units.System
 	icons   weather.IconSet
 
+	// sortMode orders the city axis; filterQuery narrows it. Both are
+	// view transforms: rebuildView derives m.cities from cfg.Cities and
+	// never writes back, so the saved order always survives them.
+	sortMode    sortMode
+	filterQuery string
+
 	w, h int
 
 	// Collaborators and fetch bookkeeping. Deps are injected after New
@@ -171,14 +177,15 @@ func New(cfg store.Config, cache store.Cache) Model {
 	copy(cities, cfg.Cities)
 
 	return Model{
-		screen:  screenGrid,
-		cities:  cities,
-		data:    data,
-		days:    cfg.ForecastDays,
-		density: parseDensity(cfg.Density),
-		units:   u,
-		icons:   icons,
-		cfg:     cfg,
+		screen:   screenGrid,
+		cities:   cities,
+		data:     data,
+		days:     cfg.ForecastDays,
+		density:  parseDensity(cfg.Density),
+		units:    u,
+		icons:    icons,
+		sortMode: parseSortMode(cfg.Sort),
+		cfg:      cfg,
 		keys:    defaultKeyMap(),
 		help:    help.New(),
 		spinner: sp,

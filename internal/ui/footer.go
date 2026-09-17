@@ -31,6 +31,9 @@ func (m Model) footer(width int) string {
 	th := newTheme()
 
 	hints := " ↑↓ city · ←→ day · ⏎ zoom · a add · / filter · s sort · ? help"
+	if m.sortMode != sortManual {
+		hints = " sorted: " + m.sortMode.String() + " ·" + hints
+	}
 
 	var status string
 	switch {

@@ -210,6 +210,12 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.confirmDelete = false
 		m = m.deleteSelectedCity()
 		return m, saveConfigCmd(m.configPath, m.cfg)
+
+	case key.Matches(msg, m.keys.Sort):
+		m.sortMode = m.sortMode.Next()
+		m.cfg.Sort = m.sortMode.String()
+		m = m.rebuildView()
+		return m, saveConfigCmd(m.configPath, m.cfg)
 	}
 	return m, nil
 }

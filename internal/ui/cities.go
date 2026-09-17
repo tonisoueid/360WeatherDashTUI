@@ -40,7 +40,8 @@ func (m Model) addCity(c weather.City) (Model, error) {
 		return m, fmt.Errorf("%s is already saved", dup.Name)
 	}
 	m.cities = append(m.cities, c)
-	return m.syncConfigCities(), nil
+	m = m.syncConfigCities()
+	return m.rebuildView(), nil
 }
 
 // deleteSelectedCity removes the city under the cursor.
@@ -61,7 +62,8 @@ func (m Model) deleteSelectedCity() Model {
 
 	m.clampCursor()
 	m.ensureCursorVisible()
-	return m.syncConfigCities()
+	m = m.syncConfigCities()
+	return m.rebuildView()
 }
 
 // syncConfigCities copies the display order into the saved config.
