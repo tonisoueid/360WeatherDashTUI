@@ -1,10 +1,13 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 
+	"github.com/tsoueid/weatherdash/internal/geocode"
 	"github.com/tsoueid/weatherdash/internal/store"
 	"github.com/tsoueid/weatherdash/internal/units"
 	"github.com/tsoueid/weatherdash/internal/weather"
@@ -79,11 +82,43 @@ type Model struct {
 
 	w, h int
 
+	// Collaborators and fetch bookkeeping. Deps are injected after New
+	// so that tests and the demo mode can build a fully functional
+	// model with no network at all.
+	provider   weather.Provider
+	geocoder   *geocode.Client
+	configPath string
+	cachePath  string
+	reqID      int
+	loading    bool
+	lastOK     time.Time
+	lastErr    error
+	backoffTil time.Time
+
 	cfg     store.Config
 	keys    keyMap
 	help    help.Model
 	spinner spinner.Model
 	filter  textinput.Model
+}
+
+// Deps are the collaborators the model needs to do real work. They are
+// injected after New so that tests and the demo mode can build a fully
+// functional model with no network at all.
+type Deps struct {
+	Provider   weather.Provider
+	Geocoder   *geocode.Client
+	ConfigPath string
+	CachePath  string
+}
+
+// WithDeps returns a copy of the model wired to its collaborators.
+func (m Model) WithDeps(d Deps) Model {
+	m.provider = d.Provider
+	m.geocoder = d.Geocoder
+	m.configPath = d.ConfigPath
+	m.cachePath = d.CachePath
+	return m
 }
 
 // New builds the initial model from config and whatever the cache holds.
