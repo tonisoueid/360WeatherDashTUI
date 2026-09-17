@@ -66,3 +66,12 @@ func tempColor(c float64) lipgloss.Color {
 // lipglossWidth is a local alias so callers do not each import lipgloss
 // just to measure a string.
 func lipglossWidth(s string) int { return lipgloss.Width(s) }
+
+// lipglossStyle aliases the style type so detail.go can name it without
+// importing lipgloss directly.
+type lipglossStyle = lipgloss.Style
+
+// styleFor builds a foreground style from a colour.
+func styleFor(c lipgloss.Color) lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(c)
+}

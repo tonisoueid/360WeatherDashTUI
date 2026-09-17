@@ -2,8 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/tsoueid/weatherdash/internal/widgets"
 )
 
 // View dispatches to the active screen's renderer.
@@ -28,4 +31,28 @@ func (m Model) View() string {
 		return m.renderGrid()
 	}
 	return m.renderGrid()
+}
+
+// fill pads a block of lines to exactly the window size, so every
+// screen returns a full frame and none of them has to repeat the
+// arithmetic.
+func (m Model) fill(lines []string) string {
+	return m.fillWithFooter(lines, "")
+}
+
+// fillWithFooter pads lines and pins a hint to the bottom row.
+func (m Model) fillWithFooter(lines []string, hint string) string {
+	out := make([]string, 0, m.h)
+	for _, l := range lines {
+		out = append(out, widgets.Pad(l, m.w))
+	}
+	for len(out) < m.h-1 {
+		out = append(out, strings.Repeat(" ", m.w))
+	}
+	if hint != "" {
+		out = append(out, newTheme().dim.Render(widgets.Pad(hint, m.w)))
+	} else {
+		out = append(out, strings.Repeat(" ", m.w))
+	}
+	return strings.Join(out[:m.h], "\n")
 }
