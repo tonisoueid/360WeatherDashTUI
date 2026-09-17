@@ -1,0 +1,4 @@
+/weatherdash
+/dist/
+*.out
+.DS_Store
