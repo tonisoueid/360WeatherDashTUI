@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/tsoueid/weatherdash/internal/geocode"
 	"github.com/tsoueid/weatherdash/internal/store"
 	"github.com/tsoueid/weatherdash/internal/weather"
 )
@@ -79,5 +80,40 @@ func saveCacheCmd(path string, data map[string]weather.Forecast) tea.Cmd {
 		c.Forecasts = snapshot
 		_ = store.SaveCache(path, c)
 		return nil
+	}
+}
+
+// searchDebounce is how long the input must be idle before a search
+// fires. Long enough that typing a city name costs one request rather
+// than one per character; short enough to feel immediate.
+const searchDebounce = 250 * time.Millisecond
+
+// debounceCmd fires after the search input has been idle.
+//
+// Every keystroke schedules one of these. Only the message whose seq
+// matches the model's current sequence triggers a request, so the four
+// timers left over from typing "Pari" expire harmlessly.
+func debounceCmd(query string, seq int) tea.Cmd {
+	return tea.Tick(searchDebounce, func(time.Time) tea.Msg {
+		return debounceMsg{seq: seq, query: query}
+	})
+}
+
+// geocodeCmd performs a city search.
+//
+// The result carries its sequence number because responses can arrive
+// out of order: a request for "Pari" may well land after the one for
+// "Paris", and applying it would replace the right answer with a stale
+// one.
+func geocodeCmd(g *geocode.Client, query string, seq int) tea.Cmd {
+	return func() tea.Msg {
+		if g == nil {
+			return geocodeMsg{seq: seq, err: errors.New("no geocoder configured")}
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		results, err := g.Search(ctx, query)
+		return geocodeMsg{seq: seq, results: results, err: err}
 	}
 }
