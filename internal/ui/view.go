@@ -33,6 +33,8 @@ func (m Model) View() string {
 		return m.renderDetail()
 	case screenAddCity:
 		return m.renderAddCity()
+	case screenHelp:
+		return m.renderHelp()
 	}
 	return m.renderGrid()
 }

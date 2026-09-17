@@ -162,6 +162,22 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleFilterKey(msg)
 	}
 
+	if key.Matches(msg, m.keys.Help) {
+		if m.screen == screenHelp {
+			m.screen = m.helpReturn
+		} else {
+			m.helpReturn = m.screen
+			m.screen = screenHelp
+		}
+		return m, nil
+	}
+	if m.screen == screenHelp {
+		if key.Matches(msg, m.keys.Back) {
+			m.screen = m.helpReturn
+		}
+		return m, nil
+	}
+
 	switch m.screen {
 	case screenGrid:
 		return m.handleGridKey(msg)

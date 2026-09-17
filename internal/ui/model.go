@@ -108,6 +108,10 @@ type Model struct {
 	// filtering is true while the filter input has the keyboard.
 	filtering bool
 
+	// helpReturn is the screen ? was pressed on, so closing the overlay
+	// returns to it instead of always landing on the grid.
+	helpReturn screen
+
 	cfg     store.Config
 	keys    keyMap
 	help    help.Model
@@ -189,11 +193,11 @@ func New(cfg store.Config, cache store.Cache) Model {
 		icons:    icons,
 		sortMode: parseSortMode(cfg.Sort),
 		cfg:      cfg,
-		keys:    defaultKeyMap(),
-		help:    help.New(),
-		spinner: sp,
-		filter:  fi,
-		search:  si,
+		keys:     defaultKeyMap(),
+		help:     help.New(),
+		spinner:  sp,
+		filter:   fi,
+		search:   si,
 	}
 }
 
