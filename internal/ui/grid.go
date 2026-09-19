@@ -117,12 +117,27 @@ func (m Model) dayHeader(l layout) string {
 // labels never promise more than the cells beneath them actually show.
 func (m Model) fieldHeader(l layout) string {
 	th := newTheme()
+
+	// Expanded density is not tier-gated the way compact cells are: it
+	// always gives condition, temperature, and rain their own row
+	// regardless of l.tier, which describes how much a COMPACT cell
+	// packs into one line. Labelling it by l.tier would leave "rain"
+	// off the header while the precipitation row sits right there
+	// underneath it — the header lying about what the data shows.
+	tier := l.tier
+	if m.density == densityExpanded {
+		tier = widgets.TierRich
+	}
+
 	var b strings.Builder
 	b.WriteString(strings.Repeat(" ", l.labelW))
 	for d := 0; d < l.days; d++ {
-		b.WriteString(widgets.CellHeader(l.cellW, l.tier))
+		b.WriteString(widgets.CellHeader(l.cellW, tier))
 	}
-	return th.dim.Render(widgets.Pad(b.String(), m.w))
+	// Bold white, like the day-date header above it: this row is a
+	// column legend, not secondary chrome, and dim grey read as an
+	// afterthought next to the day labels it sits directly beneath.
+	return th.labelSel.Render(widgets.Pad(b.String(), m.w))
 }
 
 // dayLabel names one column of the forecast window: "Today" for the
@@ -179,10 +194,14 @@ func (m Model) cityRow(idx int, l layout) []string {
 			continue
 		}
 		icons.WriteString(widgets.Pad(weather.Icon(day.Code, m.icons), l.cellW))
+		// Fixed-width, right-aligned digits — matching widgets.Cell's
+		// own compact-tier formatting — so a "9/3" day and a "-12/-30"
+		// day still put their slash and their rain figure in the same
+		// column when scanning down the row beneath them.
 		temps.WriteString(widgets.Pad(
-			fmt.Sprintf("%d/%d", m.units.TempNum(day.HiC), m.units.TempNum(day.LoC)),
+			fmt.Sprintf("%3d/%3d", m.units.TempNum(day.HiC), m.units.TempNum(day.LoC)),
 			l.cellW))
-		badge := precipBadgeStyle(float64(day.PrecipProb)).Render(fmt.Sprintf("%d%%", day.PrecipProb))
+		badge := precipBadgeStyle(float64(day.PrecipProb)).Render(fmt.Sprintf("%3d%%", day.PrecipProb))
 		precip.WriteString(widgets.Pad(badge, l.cellW))
 	}
 

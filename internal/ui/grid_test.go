@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/tsoueid/weatherdash/internal/widgets"
 )
 
 // Every line of the grid must be exactly the terminal width, or the
@@ -94,6 +96,26 @@ func TestRenderGridEmptyCityList(t *testing.T) {
 		if got := lipgloss.Width(line); got != 100 {
 			t.Errorf("line %d width = %d, want 100", i, got)
 		}
+	}
+}
+
+// TestFieldHeaderMatchesExpandedDensity guards a real mismatch: at a
+// width where compact cells would tier down to Medium (no rain
+// figure), expanded density still gives rain its own dedicated row —
+// it is never tier-gated the way a compact cell is. The header must
+// say so, or it lies about what the row beneath it actually shows.
+func TestFieldHeaderMatchesExpandedDensity(t *testing.T) {
+	m := testModel(t, 3)
+	m.w, m.h = 120, 30 // TierMedium for compact cells at this width
+	m.density = densityExpanded
+
+	if tier := m.layout().tier; tier != widgets.TierMedium {
+		t.Fatalf("test assumes TierMedium at this width; got %v (adjust width)", tier)
+	}
+
+	out := m.fieldHeader(m.layout())
+	if !strings.Contains(out, "rain") {
+		t.Errorf("expanded field header = %q, want it to name the rain column it always renders", out)
 	}
 }
 

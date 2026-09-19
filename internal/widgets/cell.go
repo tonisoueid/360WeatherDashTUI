@@ -16,32 +16,48 @@ type Tier int
 const (
 	// TierNone is too narrow to render anything.
 	TierNone Tier = iota
-	// TierMinimal is icon plus the daily high: "O 24".
+	// TierMinimal is icon plus the daily high: "O  24".
 	TierMinimal
-	// TierMedium adds the low, with room to breathe: "O  24/12".
+	// TierMedium adds the low, with room to breathe: "O   24/ 12".
 	TierMedium
 	// TierRich adds the rain probability as a number, not a glyph:
-	// "O  24/12  45%".
+	// "O   24/ 12   45%".
 	TierRich
+)
+
+// Sub-field widths shared by Cell and CellHeader, so a header word and
+// the data beneath it start in exactly the same column instead of
+// merely approximating it.
+//
+// Every number is fixed-width and right-aligned (iconW is always 1:
+// weather.IconWidth), not sized to whatever that particular value
+// happens to need. A day with "9/3" and a day with "-12/-30" must
+// still start their rain figure at the same column, or scrolling down
+// a column of dates turns into a zig-zag — the exact defect a
+// screenshot of this grid surfaced: two-digit and three-character
+// temperatures shifted the rain percentage sideways row by row.
+const (
+	iconW = 1
+	gapW  = 2 // breathing room between sections
+	tempW = 7 // "%3d/%3d": "-12/-30" .. "  9/  3", always 7 columns
+	rainW = 4 // "%3d%%":   "  0%"    .. " 100%",  always 4 columns
 )
 
 // MinWidth is the narrowest cell that can render this tier.
 //
-// TierMedium and TierRich both got wider along with their content: the
-// double space between sections is deliberate breathing room, not
-// padding left over from a narrower design, and TierRich's rain figure
-// can run to three digits ("100%"). Undercounting either would let
-// TierFor pick a tier whose own content it then has to truncate — the
-// exact "clipped '24/1'" failure this package's own doc comment warns
-// against.
+// Each value is the tier's fixed content width exactly — iconW, gapW,
+// tempW and rainW leave no row-to-row slack to undercount, unlike a
+// format string sized off one example value. A tier whose own content
+// no longer fits is the "clipped '24/1'" failure this package's own
+// doc comment warns against.
 func (t Tier) MinWidth() int {
 	switch t {
 	case TierRich:
-		return 14
+		return iconW + gapW + tempW + gapW + rainW
 	case TierMedium:
-		return 8
+		return iconW + gapW + tempW
 	case TierMinimal:
-		return 5
+		return iconW + 1 + 3 // icon, one space, a right-aligned "%3d" high
 	default:
 		return 0
 	}
@@ -93,15 +109,15 @@ func Cell(d weather.Day, width int, tier Tier, set weather.IconSet, u units.Syst
 	var body string
 	switch tier {
 	case TierMinimal:
-		body = fmt.Sprintf("%s %d", icon, hi)
+		body = fmt.Sprintf("%s %3d", icon, hi)
 	case TierMedium:
-		body = fmt.Sprintf("%s  %d/%d", icon, hi, u.TempNum(d.LoC))
+		body = fmt.Sprintf("%s  %3d/%3d", icon, hi, u.TempNum(d.LoC))
 	default:
-		rain := fmt.Sprintf("%d%%", d.PrecipProb)
+		rain := fmt.Sprintf("%3d%%", d.PrecipProb)
 		if rainStyle != nil {
 			rain = rainStyle(float64(d.PrecipProb)).Render(rain)
 		}
-		body = fmt.Sprintf("%s  %d/%d  %s", icon, hi, u.TempNum(d.LoC), rain)
+		body = fmt.Sprintf("%s  %3d/%3d  %s", icon, hi, u.TempNum(d.LoC), rain)
 	}
 	return Pad(body, width)
 }
@@ -111,30 +127,27 @@ func Cell(d weather.Day, width int, tier Tier, set weather.IconSet, u units.Syst
 // header reads as a legend for the data beneath it. It never claims a
 // section a cell at this tier doesn't actually render.
 //
-// Its wording is chosen to fit TierRich's own minimum width (14) with
-// no truncation at all — "cond temp rain" is exactly 14 columns — so
-// the single most informative header does not itself become the thing
-// that gets clipped mid-word the moment a terminal sits right at that
-// boundary, the way "cond  hi/lo  rain%" (Cell's own double-spaced,
-// unabbreviated wording) did at the very common 120-column/7-day case.
+// It does not try to line up letter-for-letter with Cell's own
+// icon/gap/temp/gap/rain columns: the icon's section is only iconW+gapW
+// (3) columns wide, too narrow to hold any legible abbreviation of
+// "condition" AND a separating space, and an early version that forced
+// the attempt produced "cndtemp" — the two words running together are
+// worse than not aligning at all. Each tier's MinWidth is now sized to
+// Cell's own fixed-width content (see the constants above), which is
+// wider than these plain-word headers ever need, so simple single-space
+// wording always has room to spare and never merges into the next day
+// column the way a tighter, exactly-sized string could.
 func CellHeader(width int, tier Tier) string {
 	if width <= 0 || tier == TierNone {
 		return strings.Repeat(" ", width)
 	}
 
-	// One column short of each tier's own minimum width, deliberately:
-	// a label that exactly fills its cell leaves Pad nothing to add, so
-	// two day columns run together with no gap between them ("cond
-	// tempcond temp") at whichever width happens to make cellW equal
-	// the label's own length — 80 columns, very commonly, at
-	// TierMedium. Reserving one trailing column guarantees a separator
-	// survives at that tier's tightest common width.
 	var body string
 	switch tier {
 	case TierMinimal:
 		body = "cond"
 	case TierMedium:
-		body = "cond tmp"
+		body = "cond temp"
 	default:
 		body = "cond temp rain"
 	}

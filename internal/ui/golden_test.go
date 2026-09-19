@@ -9,6 +9,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
+
+	"github.com/tsoueid/weatherdash/internal/widgets"
 )
 
 var update = flag.Bool("update", false, "rewrite golden files")
@@ -65,6 +67,20 @@ func TestGoldenGrid80x24(t *testing.T) {
 
 func TestGoldenGrid120x40(t *testing.T) {
 	assertGolden(t, "grid_120x40", goldenModel(t, 120, 40).View())
+}
+
+// TestGoldenGridRich130x30 is the only golden that exercises
+// TierRich's compact-density rendering (rain percentage, full
+// spacing): TierRich.MinWidth grew to fit its now fixed-width figures,
+// so 120 columns — the widest of the other grid goldens — lands on
+// TierMedium instead. Without this, no golden frame would render the
+// rain-percentage badge at all.
+func TestGoldenGridRich130x30(t *testing.T) {
+	m := goldenModel(t, 130, 30)
+	if got := m.layout().tier; got != widgets.TierRich {
+		t.Fatalf("this golden is only useful if it reaches TierRich; got %v (add width)", got)
+	}
+	assertGolden(t, "grid_rich_130x30", m.View())
 }
 
 func TestGoldenGridExpanded(t *testing.T) {

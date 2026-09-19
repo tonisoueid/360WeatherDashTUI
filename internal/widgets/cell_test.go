@@ -27,7 +27,7 @@ func sampleDay() weather.Day {
 func TestCellWidthIsExact(t *testing.T) {
 	sets := []weather.IconSet{weather.IconsASCII, weather.IconsUnicode, weather.IconsNerd}
 	for _, set := range sets {
-		for _, w := range []int{5, 6, 7, 8, 10, 13, 14, 16, 20} {
+		for _, w := range []int{5, 7, 9, 10, 13, 15, 16, 20} {
 			tier := TierFor(w)
 			got := Cell(sampleDay(), w, tier, set, units.Metric, nil)
 			if lipgloss.Width(got) != w {
@@ -44,9 +44,9 @@ func TestTierForThresholds(t *testing.T) {
 		want Tier
 	}{
 		{0, TierNone}, {4, TierNone},
-		{5, TierMinimal}, {7, TierMinimal},
-		{8, TierMedium}, {13, TierMedium},
-		{14, TierRich}, {20, TierRich},
+		{5, TierMinimal}, {9, TierMinimal},
+		{10, TierMedium}, {15, TierMedium},
+		{16, TierRich}, {20, TierRich},
 	}
 	for _, tc := range tests {
 		if got := TierFor(tc.w); got != tc.want {
@@ -75,9 +75,38 @@ func TestCellMinimalShowsHighOnly(t *testing.T) {
 }
 
 func TestCellMediumShowsHighAndLow(t *testing.T) {
-	got := Cell(sampleDay(), 9, TierMedium, weather.IconsASCII, units.Metric, nil)
+	got := Cell(sampleDay(), TierMedium.MinWidth(), TierMedium, weather.IconsASCII, units.Metric, nil)
 	if !strings.Contains(got, "24") || !strings.Contains(got, "12") {
 		t.Errorf("medium cell %q must show both 24 and 12", got)
+	}
+}
+
+// TestCellFixedWidthTempAligns is the regression test for the bug a
+// screenshot of the real grid surfaced: temperatures were formatted
+// with a plain "%d", so a two-digit day and a three-character day
+// (negative double digits) put the slash — and everything after it —
+// in different columns depending on the row. "%3d/%3d" must always
+// produce the same 7-column shape regardless of digit count, so a
+// column of dates stays a straight column instead of a zig-zag.
+func TestCellFixedWidthTempAligns(t *testing.T) {
+	warm := sampleDay() // HiC 24, LoC 12: two digits each
+	cold := sampleDay()
+	cold.HiC, cold.LoC = -5, -12 // one and two digits, with a sign
+
+	w := TierMedium.MinWidth()
+	warmCell := Cell(warm, w, TierMedium, weather.IconsASCII, units.Metric, nil)
+	coldCell := Cell(cold, w, TierMedium, weather.IconsASCII, units.Metric, nil)
+
+	if !strings.Contains(warmCell, " 24/ 12") {
+		t.Errorf("warm cell %q must right-align to \" 24/ 12\"", warmCell)
+	}
+	if !strings.Contains(coldCell, " -5/-12") {
+		t.Errorf("cold cell %q must right-align to \" -5/-12\"", coldCell)
+	}
+	// Both must place the slash in the SAME column: the whole point of
+	// fixed-width formatting.
+	if strings.Index(warmCell, "/") != strings.Index(coldCell, "/") {
+		t.Errorf("slash column differs: warm %q, cold %q", warmCell, coldCell)
 	}
 }
 
@@ -85,16 +114,40 @@ func TestCellMediumShowsHighAndLow(t *testing.T) {
 // request: TierMedium must not glue the icon straight onto the
 // temperatures the way TierMinimal does.
 func TestCellMediumHasMoreRoomThanTheDigitsAlone(t *testing.T) {
-	got := Cell(sampleDay(), 14, TierMedium, weather.IconsASCII, units.Metric, nil)
-	if !strings.Contains(got, "  24/12") {
+	got := Cell(sampleDay(), TierMedium.MinWidth(), TierMedium, weather.IconsASCII, units.Metric, nil)
+	if !strings.Contains(got, "   24/ 12") {
 		t.Errorf("medium cell %q must have breathing room before the temperatures", got)
 	}
 }
 
 func TestCellRichShowsRainPercent(t *testing.T) {
-	got := Cell(sampleDay(), 14, TierRich, weather.IconsASCII, units.Metric, nil)
+	got := Cell(sampleDay(), TierRich.MinWidth(), TierRich, weather.IconsASCII, units.Metric, nil)
 	if !strings.Contains(got, "85%") {
 		t.Errorf("rich cell %q must show the rain probability as 85%%, not a glyph", got)
+	}
+}
+
+// TestCellFixedWidthRainAligns is TestCellFixedWidthTempAligns's
+// counterpart for the rain figure: "%3d%%" must right-align "8%" and
+// "100%" to the same column regardless of digit count.
+func TestCellFixedWidthRainAligns(t *testing.T) {
+	low := sampleDay()
+	low.PrecipProb = 8
+	high := sampleDay()
+	high.PrecipProb = 100
+
+	w := TierRich.MinWidth()
+	lowCell := Cell(low, w, TierRich, weather.IconsASCII, units.Metric, nil)
+	highCell := Cell(high, w, TierRich, weather.IconsASCII, units.Metric, nil)
+
+	if !strings.Contains(lowCell, "  8%") {
+		t.Errorf("low cell %q must right-align to \"  8%%\"", lowCell)
+	}
+	if !strings.Contains(highCell, "100%") {
+		t.Errorf("high cell %q must show \"100%%\" at full width", highCell)
+	}
+	if strings.Index(lowCell, "%") != strings.Index(highCell, "%") {
+		t.Errorf("%% column differs: low %q, high %q", lowCell, highCell)
 	}
 }
 
@@ -110,14 +163,14 @@ func TestCellRichColoursTheRainFigure(t *testing.T) {
 	style := func(float64) lipgloss.Style {
 		return lipgloss.NewStyle().Background(lipgloss.Color("27"))
 	}
-	got := Cell(sampleDay(), 14, TierRich, weather.IconsASCII, units.Metric, style)
+	got := Cell(sampleDay(), TierRich.MinWidth(), TierRich, weather.IconsASCII, units.Metric, style)
 	if !strings.Contains(got, "\x1b[48;5;27m") {
 		t.Errorf("rich cell %q must carry the rainStyle background", got)
 	}
 }
 
 func TestCellRespectsUnits(t *testing.T) {
-	got := Cell(sampleDay(), 14, TierRich, weather.IconsASCII, units.Imperial, nil)
+	got := Cell(sampleDay(), TierRich.MinWidth(), TierRich, weather.IconsASCII, units.Imperial, nil)
 	if !strings.Contains(got, "75") {
 		t.Errorf("imperial cell %q must show 75 (24°C)", got)
 	}
@@ -136,9 +189,9 @@ func TestCellTierNoneIsBlank(t *testing.T) {
 // A city with no data yet must render an empty cell of the right width,
 // not a misleading 0°.
 func TestCellZeroDayRendersPlaceholder(t *testing.T) {
-	got := Cell(weather.Day{}, 9, TierMedium, weather.IconsASCII, units.Metric, nil)
-	if lipgloss.Width(got) != 9 {
-		t.Errorf("width = %d, want 9", lipgloss.Width(got))
+	got := Cell(weather.Day{}, TierMedium.MinWidth(), TierMedium, weather.IconsASCII, units.Metric, nil)
+	if lipgloss.Width(got) != TierMedium.MinWidth() {
+		t.Errorf("width = %d, want %d", lipgloss.Width(got), TierMedium.MinWidth())
 	}
 	if strings.Contains(got, "0°") {
 		t.Errorf("empty day rendered %q; a zero day must not show 0°", got)
@@ -152,7 +205,7 @@ func TestCellHeaderWidthIsExact(t *testing.T) {
 		w    int
 		tier Tier
 	}{
-		{5, TierMinimal}, {8, TierMedium}, {14, TierRich}, {20, TierRich}, {3, TierNone},
+		{5, TierMinimal}, {10, TierMedium}, {16, TierRich}, {20, TierRich}, {3, TierNone},
 	} {
 		got := CellHeader(tc.w, tc.tier)
 		if lipgloss.Width(got) != tc.w {
@@ -162,7 +215,7 @@ func TestCellHeaderWidthIsExact(t *testing.T) {
 }
 
 func TestCellHeaderNamesOnlyWhatTheTierShows(t *testing.T) {
-	minimal := CellHeader(5, TierMinimal)
+	minimal := CellHeader(TierMinimal.MinWidth(), TierMinimal)
 	if !strings.Contains(minimal, "cond") {
 		t.Errorf("minimal header %q must name the condition column", minimal)
 	}
@@ -170,15 +223,15 @@ func TestCellHeaderNamesOnlyWhatTheTierShows(t *testing.T) {
 		t.Errorf("minimal header %q must not claim columns TierMinimal doesn't show", minimal)
 	}
 
-	medium := CellHeader(13, TierMedium)
-	if !strings.Contains(medium, "tmp") {
+	medium := CellHeader(TierMedium.MinWidth(), TierMedium)
+	if !strings.Contains(medium, "temp") {
 		t.Errorf("medium header %q must name the temperature column", medium)
 	}
 	if strings.Contains(medium, "rain") {
 		t.Errorf("medium header %q must not claim the rain column TierMedium doesn't show", medium)
 	}
 
-	rich := CellHeader(20, TierRich)
+	rich := CellHeader(TierRich.MinWidth(), TierRich)
 	if !strings.Contains(rich, "rain") {
 		t.Errorf("rich header %q must name the rain column", rich)
 	}

@@ -8,17 +8,20 @@ import (
 )
 
 func TestLayoutTiersByWidth(t *testing.T) {
-	// TierRich got wider (see widgets.Tier.MinWidth) to fit the rain
-	// percentage and its own breathing room, so it now takes a wider
-	// terminal to reach at the default 7-day window than it used to —
-	// 120 still gets there, 100 no longer does.
+	// TierRich and TierMedium both got wider (see widgets.Tier.MinWidth)
+	// to hold FIXED-width temperature and rain figures — "%3d/%3d" and
+	// "%3d%%" always reserve their worst-case digit width, which costs
+	// more than the old variable "%d" ever did for a typical two-digit
+	// value, but is the only way two different rows' rain figures land
+	// in the same column. That correctly costs tier-reachability at the
+	// default 7-day window: 120 columns now lands on Medium, not Rich.
 	tests := []struct {
 		w        int
 		wantTier widgets.Tier
 	}{
-		{120, widgets.TierRich},
+		{120, widgets.TierMedium},
 		{100, widgets.TierMedium},
-		{80, widgets.TierMedium},
+		{80, widgets.TierMinimal},
 		{60, widgets.TierMinimal},
 	}
 	for _, tc := range tests {
