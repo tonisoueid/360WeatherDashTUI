@@ -59,19 +59,39 @@ func (m Model) renderHelp() string {
 // helpKeys lays out the key groups, one binding per row, unpadded: the
 // caller measures the result to size the keys column.
 func (m Model) helpKeys(th theme) []string {
-	var lines []string
-	for i, group := range m.keys.FullHelp() {
-		name := "Other"
-		if i < len(helpGroups) {
-			name = helpGroups[i]
+	groups := m.keys.FullHelp()
+
+	build := func(spaced bool) []string {
+		var lines []string
+		for i, group := range groups {
+			name := "Other"
+			if i < len(helpGroups) {
+				name = helpGroups[i]
+			}
+			lines = append(lines, th.label.Render("  "+name))
+			for _, b := range group {
+				h := b.Help()
+				lines = append(lines, fmt.Sprintf("    %s  %s",
+					widgets.Pad(h.Key, 10), th.dim.Render(h.Desc)))
+			}
+			if spaced && i < len(groups)-1 {
+				lines = append(lines, " ")
+			}
 		}
-		lines = append(lines, th.label.Render("  "+name))
-		for _, b := range group {
-			h := b.Help()
-			lines = append(lines, fmt.Sprintf("    %s  %s",
-				widgets.Pad(h.Key, 10), th.dim.Render(h.Desc)))
-		}
-		lines = append(lines, " ")
+		return lines
+	}
+
+	// renderHelp's frame is capped at m.h-1 content rows (fillWithFooter
+	// truncates rather than scrolls), and this screen's whole job is to
+	// list every key — so the layout must never let the key list itself
+	// be what gets silently cut. Try the spaced-out groups first; if the
+	// key list has grown past what a spaced layout fits in this
+	// terminal, close the gaps between groups instead of losing a key
+	// off the bottom. (+2 accounts for the "Keys" title and its rule,
+	// which sit above helpKeys' own lines in renderHelp.)
+	lines := build(true)
+	if len(lines)+2 > m.h-1 {
+		lines = build(false)
 	}
 	return lines
 }

@@ -22,6 +22,7 @@ const (
 	screenDetail
 	screenAddCity
 	screenHelp
+	screenMap
 )
 
 // density controls how many terminal lines each city row occupies.
@@ -112,6 +113,12 @@ type Model struct {
 	// helpReturn is the screen ? was pressed on, so closing the overlay
 	// returns to it instead of always landing on the grid.
 	helpReturn screen
+
+	// detailReturn is the screen ⏎ was pressed on to zoom into detail
+	// — the grid or the map — so esc surfaces back to whichever one the
+	// user actually came from. The zero value is screenGrid, which is
+	// exactly today's behaviour when the map is never visited.
+	detailReturn screen
 
 	// notice is a one-off startup message (config recovery) shown in
 	// the footer until the first keypress.

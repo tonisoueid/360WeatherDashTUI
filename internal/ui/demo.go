@@ -9,8 +9,14 @@ import (
 )
 
 // demoCity is one synthetic location plus the shape of its weather.
+//
+// lat/lon are real coordinates, not synthetic like the rest of the
+// data: the world map screen plots demo cities exactly as it would
+// plot real ones, so a reviewer sees Tokyo over Japan rather than
+// every city stacked on Null Island.
 type demoCity struct {
 	name, cc, country, tz string
+	lat, lon              float64
 	baseTemp              float64
 	code                  int
 }
@@ -23,14 +29,14 @@ type demoCity struct {
 // default path.
 func DemoModel() Model {
 	demo := []demoCity{
-		{"Paris", "FR", "France", "Europe/Paris", 16, 3},
-		{"Beirut", "LB", "Lebanon", "Asia/Beirut", 27, 0},
-		{"Tokyo", "JP", "Japan", "Asia/Tokyo", 12, 61},
-		{"Oslo", "NO", "Norway", "Europe/Oslo", 4, 71},
-		{"Lisbon", "PT", "Portugal", "Europe/Lisbon", 23, 0},
-		{"Berlin", "DE", "Germany", "Europe/Berlin", 15, 3},
-		{"Cairo", "EG", "Egypt", "Africa/Cairo", 31, 0},
-		{"Reykjavík", "IS", "Iceland", "Atlantic/Reykjavik", 6, 51},
+		{"Paris", "FR", "France", "Europe/Paris", 48.8566, 2.3522, 16, 3},
+		{"Beirut", "LB", "Lebanon", "Asia/Beirut", 33.8938, 35.5018, 27, 0},
+		{"Tokyo", "JP", "Japan", "Asia/Tokyo", 35.6762, 139.6503, 12, 61},
+		{"Oslo", "NO", "Norway", "Europe/Oslo", 59.9139, 10.7522, 4, 71},
+		{"Lisbon", "PT", "Portugal", "Europe/Lisbon", 38.7223, -9.1393, 23, 0},
+		{"Berlin", "DE", "Germany", "Europe/Berlin", 52.5200, 13.4050, 15, 3},
+		{"Cairo", "EG", "Egypt", "Africa/Cairo", 30.0444, 31.2357, 31, 0},
+		{"Reykjavík", "IS", "Iceland", "Atlantic/Reykjavik", 64.1466, -21.9426, 6, 51},
 	}
 
 	cfg := store.DefaultConfig()
@@ -40,7 +46,7 @@ func DemoModel() Model {
 	for i, d := range demo {
 		city := weather.City{
 			ID: "demo-" + d.name, Name: d.name, CC: d.cc,
-			Country: d.country, TZ: d.tz,
+			Country: d.country, TZ: d.tz, Lat: d.lat, Lon: d.lon,
 		}
 		cfg.Cities = append(cfg.Cities, city)
 

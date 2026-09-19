@@ -22,6 +22,7 @@ type keyMap struct {
 	Sort     key.Binding
 	Density  key.Binding
 	Units    key.Binding
+	Map      key.Binding
 	Refresh  key.Binding
 	MoveUp   key.Binding
 	MoveDown key.Binding
@@ -82,6 +83,14 @@ func defaultKeyMap() keyMap {
 			key.WithKeys("u"),
 			key.WithHelp("u", "units"),
 		),
+		// Map toggles the home view, grid to world map and back. It is
+		// not a persisted preference like Density or Units — it always
+		// opens on the grid — so it lives with the other display keys
+		// without a config field alongside it.
+		Map: key.NewBinding(
+			key.WithKeys("m"),
+			key.WithHelp("m", "world map"),
+		),
 		Refresh: key.NewBinding(
 			key.WithKeys("r"),
 			key.WithHelp("r", "refresh"),
@@ -115,6 +124,6 @@ func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Left, k.Right, k.Enter, k.Back},
 		{k.Add, k.Delete, k.Filter, k.Sort, k.MoveUp, k.MoveDown},
-		{k.Density, k.Units, k.Refresh, k.Help, k.Quit},
+		{k.Density, k.Units, k.Map, k.Refresh, k.Help, k.Quit},
 	}
 }

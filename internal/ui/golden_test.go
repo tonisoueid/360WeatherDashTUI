@@ -102,3 +102,25 @@ func TestGoldenAddCityModal(t *testing.T) {
 	m.searchResults = parisResults()
 	assertGolden(t, "addcity_80x24", m.View())
 }
+
+func TestGoldenWorldMap80x24(t *testing.T) {
+	m := goldenModel(t, 80, 24)
+	m.screen = screenMap
+	assertGolden(t, "map_80x24", m.View())
+}
+
+func TestGoldenWorldMap120x40(t *testing.T) {
+	m := goldenModel(t, 120, 40)
+	m.screen = screenMap
+	assertGolden(t, "map_120x40", m.View())
+}
+
+// TestGoldenWorldMapDay3 pins the day cursor forward so the snapshot
+// proves scrubbing actually repaints every marker, not just the day
+// the map happens to open on.
+func TestGoldenWorldMapDay3(t *testing.T) {
+	m := goldenModel(t, 120, 40)
+	m.screen = screenMap
+	m.cursorDay = 3
+	assertGolden(t, "map_day3_120x40", m.View())
+}

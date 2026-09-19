@@ -55,6 +55,20 @@ func detailHints(th theme) []footerHint {
 	}
 }
 
+// mapHints lists the world map's functions. "m grid" leads rather than
+// trailing, because on this screen going back to the list is the
+// action most people reach for first.
+func mapHints(th theme) []footerHint {
+	return []footerHint{
+		{"m grid", th.hintBack},
+		{"←→ day", th.hintDay},
+		{"↑↓ city", th.hintCity},
+		{"⏎ zoom", th.hintZoom},
+		{"u units", th.hintUnits},
+		{"? help", th.hintHelp},
+	}
+}
+
 // joinHints lays out a hint line: bold coloured functions, dim
 // separators, the same voice on every screen.
 func joinHints(th theme, hs []footerHint) string {
@@ -79,16 +93,27 @@ func (m Model) renderHints(th theme) string {
 	return joinHints(th, hs)
 }
 
-// footer renders the key hints plus a data-freshness indicator.
+// footer renders the grid's key hints plus a data-freshness indicator.
 //
 // Freshness is shown at all times, not only on failure: a dashboard
 // quietly displaying this morning's weather at six in the evening is
 // worse than one showing nothing, because nothing on screen says so.
 func (m Model) footer(width int) string {
 	th := newTheme()
+	return m.footerWith(width, th, m.renderHints(th))
+}
 
-	hints := m.renderHints(th)
+// mapFooter renders the world map's key hints plus the same freshness
+// indicator the grid shows — the map is a second home view, not a
+// lesser one, so it does not lose the "is this stale" signal.
+func (m Model) mapFooter(width int) string {
+	th := newTheme()
+	return m.footerWith(width, th, joinHints(th, mapHints(th)))
+}
 
+// footerWith lays out one hint line plus the freshness/status text
+// that both footer and mapFooter share.
+func (m Model) footerWith(width int, th theme, hints string) string {
 	var status string
 	switch {
 	case m.notice != "":

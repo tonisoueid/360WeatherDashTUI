@@ -211,6 +211,8 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleDetailKey(msg)
 	case screenAddCity:
 		return m.handleAddCityKey(msg)
+	case screenMap:
+		return m.handleMapKey(msg)
 	}
 	return m, nil
 }
@@ -245,6 +247,7 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Nothing to zoom into with no cities; stay put rather than
 		// opening an empty detail screen.
 		if len(m.cities) > 0 {
+			m.detailReturn = screenGrid
 			m.screen = screenDetail
 		}
 	case key.Matches(msg, m.keys.Add):
@@ -290,6 +293,12 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.ensureCursorVisible()
 		return m, saveConfigCmd(m.configPath, m.cfg)
 
+	case key.Matches(msg, m.keys.Map):
+		// Unlike Density and Units, the home view is not persisted:
+		// weatherdash always opens on the grid, so there is no
+		// m.cfg write and no saveConfigCmd here.
+		m.screen = screenMap
+
 	case key.Matches(msg, m.keys.MoveUp), key.Matches(msg, m.keys.MoveDown):
 		if m.sortMode != sortManual {
 			// Say why rather than swallowing the key, so the user
@@ -313,6 +322,38 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m Model) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
 	case key.Matches(msg, m.keys.Back):
+		// Surfaces back to wherever ⏎ was pressed — the grid or the
+		// map — not always the grid, so zooming from the map and
+		// backing out returns you to the map.
+		m.screen = m.detailReturn
+	case key.Matches(msg, m.keys.Up):
+		m.moveCity(-1)
+		m.ensureCursorVisible()
+	case key.Matches(msg, m.keys.Down):
+		m.moveCity(1)
+		m.ensureCursorVisible()
+	case key.Matches(msg, m.keys.Left):
+		m.moveDay(-1)
+	case key.Matches(msg, m.keys.Right):
+		m.moveDay(1)
+	case key.Matches(msg, m.keys.Refresh):
+		return m.refreshCmd()
+	case key.Matches(msg, m.keys.Units):
+		m.units = m.units.Toggle()
+		m.cfg.Units = m.units.String()
+		return m, saveConfigCmd(m.configPath, m.cfg)
+	}
+	return m, nil
+}
+
+// handleMapKey routes keys on the world map. The SAME shared cursor the
+// grid and detail screens use stays authoritative here: ↑↓ moves the
+// city cursor, ←→ scrubs the map across the forecast window and every
+// marker updates to that day's value, and ⏎ zooms into detail exactly
+// as it does from the grid.
+func (m Model) handleMapKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Map), key.Matches(msg, m.keys.Back):
 		m.screen = screenGrid
 	case key.Matches(msg, m.keys.Up):
 		m.moveCity(-1)
@@ -326,6 +367,11 @@ func (m Model) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.moveDay(1)
 	case key.Matches(msg, m.keys.Refresh):
 		return m.refreshCmd()
+	case key.Matches(msg, m.keys.Enter):
+		if len(m.cities) > 0 {
+			m.detailReturn = screenMap
+			m.screen = screenDetail
+		}
 	case key.Matches(msg, m.keys.Units):
 		m.units = m.units.Toggle()
 		m.cfg.Units = m.units.String()

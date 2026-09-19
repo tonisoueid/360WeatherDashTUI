@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 
@@ -103,13 +104,21 @@ func (m Model) dayHeader(l layout) string {
 	var b strings.Builder
 	b.WriteString(strings.Repeat(" ", l.labelW))
 	for d := 0; d < l.days; d++ {
-		label := "Today"
-		if d > 0 {
-			label = now.AddDate(0, 0, d).Format("Mon 2")
-		}
-		b.WriteString(widgets.Pad(label, l.cellW))
+		b.WriteString(widgets.Pad(dayLabel(now, d), l.cellW))
 	}
 	return th.header.Render(widgets.Pad(b.String(), m.w))
+}
+
+// dayLabel names one column of the forecast window: "Today" for the
+// first day, else its weekday and date. Every screen that labels a day
+// axis — the grid header and the world map's status line — shares this
+// so "Fri 19" cannot mean two different days depending which screen
+// you're looking at.
+func dayLabel(now time.Time, d int) string {
+	if d == 0 {
+		return "Today"
+	}
+	return now.AddDate(0, 0, d).Format("Mon 2")
 }
 
 // cityLabel renders a city's name in its column: the full name when

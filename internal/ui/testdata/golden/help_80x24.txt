@@ -7,18 +7,18 @@
     →/l         [38;5;240mnext day[0m            [1;38;5;241m≡[0m  [1;38;5;241mfog[0m                                      
     ⏎           [38;5;240mzoom in[0m             [1;38;5;153m⋮[0m  [1;38;5;153mdrizzle[0m                                  
     esc         [38;5;240mback[0m                [1;38;5;39m☂[0m  [1;38;5;39mrain[0m                                     
-                                    [1;97m❄[0m  [1;97msnow[0m                                     
-[38;5;250m  Cities[0m                            [1;38;5;27m⋰[0m  [1;38;5;27mshowers[0m                                  
-    a           [38;5;240madd city[0m            [1;38;5;135m☈[0m  [1;38;5;135mthunderstorm[0m                             
-    d           [38;5;240mdelete city[0m         [1;38;5;240m?[0m  [1;38;5;240munknown[0m                                  
-    /           [38;5;240mfilter[0m                                                          
+[38;5;250m  Cities[0m                            [1;97m❄[0m  [1;97msnow[0m                                     
+    a           [38;5;240madd city[0m            [1;38;5;27m⋰[0m  [1;38;5;27mshowers[0m                                  
+    d           [38;5;240mdelete city[0m         [1;38;5;135m☈[0m  [1;38;5;135mthunderstorm[0m                             
+    /           [38;5;240mfilter[0m              [1;38;5;240m?[0m  [1;38;5;240munknown[0m                                  
     s           [38;5;240msort[0m                                                            
     K           [38;5;240mmove city up[0m                                                    
     J           [38;5;240mmove city down[0m                                                  
-                                                                                
 [38;5;250m  Display[0m                                                                       
     z           [38;5;240mdensity[0m                                                         
     u           [38;5;240munits[0m                                                           
+    m           [38;5;240mworld map[0m                                                       
     r           [38;5;240mrefresh[0m                                                         
     ?           [38;5;240mhelp[0m                                                            
     q           [38;5;240mquit[0m                                                            
+[38;5;240m esc or ? to close                                                              [0m
