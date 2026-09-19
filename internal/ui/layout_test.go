@@ -8,12 +8,16 @@ import (
 )
 
 func TestLayoutTiersByWidth(t *testing.T) {
+	// TierRich got wider (see widgets.Tier.MinWidth) to fit the rain
+	// percentage and its own breathing room, so it now takes a wider
+	// terminal to reach at the default 7-day window than it used to —
+	// 120 still gets there, 100 no longer does.
 	tests := []struct {
 		w        int
 		wantTier widgets.Tier
 	}{
 		{120, widgets.TierRich},
-		{100, widgets.TierRich},
+		{100, widgets.TierMedium},
 		{80, widgets.TierMedium},
 		{60, widgets.TierMinimal},
 	}

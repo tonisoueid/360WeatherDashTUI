@@ -117,6 +117,29 @@ func precipColor(pct float64) lipgloss.Color {
 	}
 }
 
+// precipBadgeStyle pairs precipColor's hue with a readable foreground,
+// for the rain-probability figure the grid prints inside its own
+// coloured tile ("45%") rather than as plain text.
+//
+// This is deliberately a full style with an explicit BACKGROUND, not
+// just precipColor used as a foreground: a foreground-only style on an
+// ANSI terminal silently inherits whatever background was last set,
+// which for a cell packed next to other coloured text is unpredictable
+// and sometimes unreadable — the exact bug the world map's markers had
+// (internal/ui/worldmap.go's mapChipBG) before they got their own
+// explicit tile. precipColor's own palette runs light-to-dark (white,
+// pale blue, rain blue, deep blue), so the badge's text flips from
+// dark to white at the same boundary the colour turns from pale to
+// saturated, keeping every probability legible on its own background.
+func precipBadgeStyle(pct float64) lipgloss.Style {
+	bg := precipColor(pct)
+	fg := lipgloss.Color("234") // near-black, for the pale end of the ramp
+	if pct >= 30 {
+		fg = lipgloss.Color("15") // white, for the saturated blues
+	}
+	return lipgloss.NewStyle().Bold(true).Background(bg).Foreground(fg)
+}
+
 // amountColor maps an hourly rainfall in mm to its figure's colour.
 // The breaks are the meteorological rain-intensity classes — drizzle,
 // moderate, heavy, torrential — and the hues are the same deepening

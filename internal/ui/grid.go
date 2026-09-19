@@ -28,9 +28,10 @@ func (m Model) renderGrid() string {
 
 	lines := make([]string, 0, m.h)
 	lines = append(lines, m.dayHeader(l))
+	lines = append(lines, m.fieldHeader(l))
 	lines = append(lines, widgets.Pad(strings.Repeat("─", m.w), m.w))
 	if m.filtering || m.filterQuery != "" {
-		lines[1] = widgets.Pad(m.filter.View(), m.w)
+		lines[2] = widgets.Pad(m.filter.View(), m.w)
 	}
 
 	body := 0
@@ -109,6 +110,21 @@ func (m Model) dayHeader(l layout) string {
 	return th.header.Render(widgets.Pad(b.String(), m.w))
 }
 
+// fieldHeader labels the pieces packed into each day cell — condition,
+// hi/lo temperature, rain probability — so "☀  24/12  45%" doesn't
+// make a new user guess which number is which. It repeats per day
+// column at that column's own tier, via widgets.CellHeader, so the
+// labels never promise more than the cells beneath them actually show.
+func (m Model) fieldHeader(l layout) string {
+	th := newTheme()
+	var b strings.Builder
+	b.WriteString(strings.Repeat(" ", l.labelW))
+	for d := 0; d < l.days; d++ {
+		b.WriteString(widgets.CellHeader(l.cellW, l.tier))
+	}
+	return th.dim.Render(widgets.Pad(b.String(), m.w))
+}
+
 // dayLabel names one column of the forecast window: "Today" for the
 // first day, else its weekday and date. Every screen that labels a day
 // axis — the grid header and the world map's status line — shares this
@@ -166,8 +182,8 @@ func (m Model) cityRow(idx int, l layout) []string {
 		temps.WriteString(widgets.Pad(
 			fmt.Sprintf("%d/%d", m.units.TempNum(day.HiC), m.units.TempNum(day.LoC)),
 			l.cellW))
-		precip.WriteString(widgets.Pad(
-			widgets.PrecipBand([]int{day.PrecipProb}, 2), l.cellW))
+		badge := precipBadgeStyle(float64(day.PrecipProb)).Render(fmt.Sprintf("%d%%", day.PrecipProb))
+		precip.WriteString(widgets.Pad(badge, l.cellW))
 	}
 
 	return []string{
@@ -189,7 +205,7 @@ func (m Model) cellsFor(idx int, f weather.Forecast, hasData bool, l layout) str
 			cell = strings.Repeat(" ", l.cellW)
 		} else {
 			day := f.Days[d]
-			cell = widgets.Cell(day, l.cellW, l.tier, m.icons, m.units)
+			cell = widgets.Cell(day, l.cellW, l.tier, m.icons, m.units, precipBadgeStyle)
 			cell = lipglossColorTemp(cell, day.HiC)
 		}
 		if idx == m.cursorCity && d == m.cursorDay {

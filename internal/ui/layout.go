@@ -18,8 +18,9 @@ const (
 	minLabelWidth = 12
 	maxLabelWidth = 18
 
-	// gridChromeLines is the day header plus the footer.
-	gridChromeLines = 3
+	// gridChromeLines is the day header, the field header, the rule
+	// (or filter input), and the footer.
+	gridChromeLines = 4
 
 	// minDayColumns is the fewest day columns worth showing. Below
 	// three the matrix stops being a comparison view.
