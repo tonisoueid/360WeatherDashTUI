@@ -162,23 +162,23 @@ func plainCells(line string, w int) string {
 	return string(b)
 }
 
-// TestStampChipsSkipsWhenSandwiched sets up three adjacent markers —
-// cursored, plain, plain — packed one column apart, so the middle
-// marker has no free column on either side once the cursored city's
-// chip (placed first) and the third marker's own dot both claim their
-// neighbours. Its temperature chip must be dropped rather than
-// overwrite either neighbour; its marker dot must still be there.
+// TestStampChipsSkipsWhenSandwiched sets up three markers two columns
+// apart — cursored, plain, plain — so the middle marker has no free
+// column on either side once chipGap is honoured: the cursored city's
+// chip (placed first, to its left) and the third marker's own dot both
+// claim its neighbours. Its temperature chip must be dropped rather
+// than overwrite either neighbour; its marker dot must still be there.
 func TestStampChipsSkipsWhenSandwiched(t *testing.T) {
-	lines := []string{strings.Repeat(" ", 10)}
+	lines := []string{strings.Repeat(" ", 14)}
 	markers := []mapMarker{
 		{col: 5, line: 0, haveTemp: true, tempC: 9, cursored: true},  // "9"
-		{col: 6, line: 0, haveTemp: true, tempC: 8, cursored: false}, // "8" — sandwiched
-		{col: 7, line: 0, haveTemp: true, tempC: 7, cursored: false}, // "7"
+		{col: 7, line: 0, haveTemp: true, tempC: 8, cursored: false}, // "8" — sandwiched
+		{col: 9, line: 0, haveTemp: true, tempC: 7, cursored: false}, // "7"
 	}
 	m := mapTestModel(t) // no cities needed; only m.units is read
 
-	m.stampChips(lines, 0, 9, markers)
-	plain := plainCells(lines[0], 10)
+	m.stampChips(lines, 0, 14, markers)
+	plain := plainCells(lines[0], 14)
 
 	if !strings.Contains(plain, "9") {
 		t.Errorf("plain = %q, want the cursored city's chip always placed", plain)

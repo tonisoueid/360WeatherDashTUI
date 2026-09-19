@@ -27,6 +27,20 @@ var (
 // colour it hasn't earned.
 var mapNoDataColor = lipgloss.Color("240")
 
+// mapChipBG is the explicit background every marker glyph and
+// temperature chip renders on.
+//
+// Without it, ANSI terminals leave a style's background as whatever
+// was last set — and every raster glyph sets its own background
+// explicitly (halfBlockStyle), so a marker or chip with only a
+// foreground colour silently inherits the LAND or SEA colour sitting
+// under it. tempColor's ramp includes greens ("42" at 12°C) and
+// yellows that nearly vanish against mapLandColor's dark green; giving
+// every marker and chip its own dark, colour-neutral tile makes the
+// ramp's full range legible regardless of what terrain it happens to
+// land on.
+var mapChipBG = lipgloss.Color("234")
+
 func mapTerrainColor(land bool) lipgloss.Color {
 	if land {
 		return mapLandColor
@@ -192,9 +206,12 @@ func mapMarkerGlyph(mk mapMarker, th theme) (string, lipglossStyle) {
 	case mk.cursored:
 		return "◉", whiteOn(mapNoDataColor).Bold(true)
 	case mk.haveTemp:
-		return "●", styleFor(tempColor(mk.tempC)).Bold(true)
+		// An explicit background, not just a foreground colour: see
+		// mapChipBG. Without it this glyph silently inherits whatever
+		// terrain colour sits under it.
+		return "●", styleFor(tempColor(mk.tempC)).Bold(true).Background(mapChipBG)
 	default:
-		return "○", th.dim
+		return "○", th.dim.Background(mapChipBG)
 	}
 }
 
@@ -240,6 +257,11 @@ func spansOverlap(occupied []mapSpan, s mapSpan) bool {
 	return false
 }
 
+// chipGap is the blank column left between a marker dot and its
+// temperature chip, so the number reads as a label beside the dot
+// rather than a second half of it.
+const chipGap = 1
+
 // stampChips writes each city's bare-number temperature beside its
 // marker, in place.
 //
@@ -282,22 +304,37 @@ func (m Model) stampChips(lines []string, left, fullWidth int, markers []mapMark
 		w := lipglossWidth(text)
 		col := left + mk.col
 
-		right := mapSpan{col + 1, col + 1 + w}
-		leftSpan := mapSpan{col - w, col}
+		// Each span reserves the gap column too, not just the digits,
+		// so a later chip can't land flush against this one's dot.
+		right := mapSpan{col + 1, col + 1 + chipGap + w}
+		leftSpan := mapSpan{col - chipGap - w, col}
+
+		// An explicit background — see mapChipBG — for the same reason
+		// the marker glyph needs one: a foreground-only style would
+		// silently inherit the land or sea colour under it. The gap
+		// gets the same background rather than being left as whatever
+		// the raster drew there, so it reads as a deliberate blank
+		// beside the dot rather than one more pixel of terrain that
+		// happens to separate them.
+		style := styleFor(tempColor(mk.tempC)).Bold(true).Background(mapChipBG)
+		gap := lipgloss.NewStyle().Background(mapChipBG).Render(strings.Repeat(" ", chipGap))
 
 		var at int
+		var reserve mapSpan
+		var ins string
 		switch {
 		case right.end <= fullWidth && !spansOverlap(occupied[mk.line], right):
-			at = right.start
+			at, reserve, ins = right.start, right, gap+style.Render(text)
 		case leftSpan.start >= 0 && !spansOverlap(occupied[mk.line], leftSpan):
-			at = leftSpan.start
+			at, reserve, ins = leftSpan.start, leftSpan, style.Render(text)+gap
 		default:
 			continue // no room without overlapping something: keep the marker, drop the chip
 		}
 
-		style := styleFor(tempColor(mk.tempC)).Bold(true)
-		lines[mk.line] = widgets.Splice(lines[mk.line], at, style.Render(text))
-		occupied[mk.line] = append(occupied[mk.line], mapSpan{at, at + w})
+		lines[mk.line] = widgets.Splice(lines[mk.line], at, ins)
+		// Reserve the gap along with the digits, so the NEXT chip on
+		// this line can't land flush against this one either.
+		occupied[mk.line] = append(occupied[mk.line], reserve)
 	}
 }
 
