@@ -25,6 +25,7 @@ type theme struct {
 	hintHelp   lipgloss.Style
 	hintBack   lipgloss.Style
 	hintUnits  lipgloss.Style
+	hintMap    lipgloss.Style
 	footerText lipgloss.Style
 }
 
@@ -52,6 +53,7 @@ func newTheme() theme {
 		hintHelp:   lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("15")),  // white
 		hintBack:   lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("213")), // pink
 		hintUnits:  lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("227")), // yellow
+		hintMap:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("203")), // salmon
 		footerText: lipgloss.NewStyle().Bold(true),
 	}
 }

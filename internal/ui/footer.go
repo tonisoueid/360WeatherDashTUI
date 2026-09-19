@@ -29,13 +29,16 @@ type footerHint struct {
 	style lipglossStyle
 }
 
-// footerHints lists the functions left to right. The styles come from
-// the theme, so the palette stays changeable in one place.
+// footerHints lists the functions left to right, most essential first:
+// footerWith drops from the END of this list when the line runs out
+// of room, so a hint's position here doubles as its survival priority
+// under space pressure.
 func footerHints(th theme) []footerHint {
 	return []footerHint{
 		{"↑↓ city", th.hintCity},
 		{"←→ day", th.hintDay},
 		{"⏎ zoom", th.hintZoom},
+		{"m map", th.hintMap},
 		{"a add", th.hintAdd},
 		{"/ filter", th.hintFilter},
 		{"s sort", th.hintSort},
@@ -82,15 +85,14 @@ func joinHints(th theme, hs []footerHint) string {
 	return " " + strings.Join(parts, " ")
 }
 
-// renderHints lays out the hint line: bold text, one colour per
-// function, dim separators. lipglossWidth measures the styled string,
-// so the ANSI codes never skew the caller's gap math.
-func (m Model) renderHints(th theme) string {
+// gridHints returns the grid's hint list, with the "sorted: X" chip
+// prefixed when a non-manual sort is active.
+func (m Model) gridHints(th theme) []footerHint {
 	hs := footerHints(th)
 	if m.sortMode != sortManual {
 		hs = append([]footerHint{{"sorted: " + m.sortMode.String(), th.hintSorted}}, hs...)
 	}
-	return joinHints(th, hs)
+	return hs
 }
 
 // footer renders the grid's key hints plus a data-freshness indicator.
@@ -100,7 +102,7 @@ func (m Model) renderHints(th theme) string {
 // worse than one showing nothing, because nothing on screen says so.
 func (m Model) footer(width int) string {
 	th := newTheme()
-	return m.footerWith(width, th, m.renderHints(th))
+	return m.footerWith(width, th, m.gridHints(th))
 }
 
 // mapFooter renders the world map's key hints plus the same freshness
@@ -108,12 +110,20 @@ func (m Model) footer(width int) string {
 // lesser one, so it does not lose the "is this stale" signal.
 func (m Model) mapFooter(width int) string {
 	th := newTheme()
-	return m.footerWith(width, th, joinHints(th, mapHints(th)))
+	return m.footerWith(width, th, mapHints(th))
 }
 
 // footerWith lays out one hint line plus the freshness/status text
 // that both footer and mapFooter share.
-func (m Model) footerWith(width int, th theme, hints string) string {
+//
+// When both don't fit, hints are dropped ONE AT A TIME from the end of
+// hs — least essential first, per the order footerHints/mapHints
+// declare — rather than all at once. A status message ("updated 3m
+// ago") is common, not exceptional, and losing every hint the moment
+// one appears would make the footer useless on the single most common
+// terminal width. Only when nothing at all fits does status take the
+// whole line.
+func (m Model) footerWith(width int, th theme, hs []footerHint) string {
 	var status string
 	switch {
 	case m.notice != "":
@@ -131,13 +141,19 @@ func (m Model) footerWith(width int, th theme, hints string) string {
 		status = th.dim.Bold(true).Render("no data yet")
 	}
 
-	gap := width - lipglossWidth(hints) - lipglossWidth(status) - 2
-	if gap < 1 {
-		// Too narrow for both: the status wins, because it is the part
-		// the user cannot get any other way.
-		return widgets.Pad(" "+status, width)
+	for {
+		hints := joinHints(th, hs)
+		gap := width - lipglossWidth(hints) - lipglossWidth(status) - 2
+		if gap >= 1 {
+			return widgets.Pad(hints+strings.Repeat(" ", gap)+status+" ", width)
+		}
+		if len(hs) == 0 {
+			// Too narrow for both: the status wins, because it is the
+			// part the user cannot get any other way.
+			return widgets.Pad(" "+status, width)
+		}
+		hs = hs[:len(hs)-1]
 	}
-	return widgets.Pad(hints+strings.Repeat(" ", gap)+status+" ", width)
 }
 
 // errSummary trims an error to something that fits on one line.

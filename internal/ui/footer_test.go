@@ -70,7 +70,7 @@ func TestFooterHintsBoldOneColorPerFunction(t *testing.T) {
 	m := testModel(t, 3)
 	got := m.footer(120)
 
-	functions := []string{"↑↓ city", "←→ day", "⏎ zoom", "a add", "/ filter", "s sort", "? help"}
+	functions := []string{"↑↓ city", "←→ day", "⏎ zoom", "m map", "a add", "/ filter", "s sort", "? help"}
 	seen := map[string]string{}
 	for _, fn := range functions {
 		if !strings.Contains(got, fn) {
