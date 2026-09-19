@@ -46,7 +46,47 @@ func (m Model) renderGrid() string {
 	}
 
 	lines = append(lines, m.footer(m.w))
-	return strings.Join(lines[:m.h], "\n")
+	frame := strings.Join(lines[:m.h], "\n")
+	if m.confirmDelete {
+		frame = m.confirmDeleteModal(frame)
+	}
+	return frame
+}
+
+// confirmDeleteModal pastes the delete confirmation over the middle of
+// the frame: a bordered box on the banner grey — the way the rest of
+// the UI raises surfaces — with the city named and the keys spelled
+// out. Nothing else on screen is redrawn; the grid stays behind the
+// modal as context for the decision.
+func (m Model) confirmDeleteModal(frame string) string {
+	c, ok := m.selectedCity()
+	if !ok {
+		return frame
+	}
+	th := newTheme()
+	box := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("214")).
+		Background(flagPanelColor).
+		Padding(0, 3).
+		Render(th.warn.Bold(true).Render("Delete "+c.Name+"?") + "\n" +
+			whiteOn(flagPanelColor).Render("enter or y delete · esc cancels"))
+
+	rows := strings.Split(box, "\n")
+	base := strings.Split(frame, "\n")
+	left := (m.w - lipglossWidth(widestLine(rows))) / 2
+	if left < 0 {
+		left = 0
+	}
+	top := (m.h - len(rows)) / 2
+	for i, r := range rows {
+		y := top + i
+		if y < 0 || y >= len(base) {
+			continue
+		}
+		base[y] = widgets.Splice(base[y], left, r)
+	}
+	return strings.Join(base, "\n")
 }
 
 // dayHeader renders the pinned column labels.
@@ -72,6 +112,17 @@ func (m Model) dayHeader(l layout) string {
 	return th.header.Render(widgets.Pad(b.String(), m.w))
 }
 
+// cityLabel renders a city's name in its column: the full name when
+// it fits, else cut one column short with an ellipsis — so the cut
+// says itself, and the name never runs flush against the day cells.
+func cityLabel(name string, w int) string {
+	if lipglossWidth(name) <= w {
+		return widgets.Pad(name, w)
+	}
+	cut := strings.TrimRight(widgets.Truncate(name, w-1), " ")
+	return widgets.Pad(cut+"…", w)
+}
+
 // cityRow renders one city as one line (compact) or three (expanded).
 func (m Model) cityRow(idx int, l layout) []string {
 	th := newTheme()
@@ -82,7 +133,7 @@ func (m Model) cityRow(idx int, l layout) []string {
 	if idx == m.cursorCity {
 		labelStyle = th.labelSel
 	}
-	label := labelStyle.Render(widgets.Pad(city.Name, l.labelW))
+	label := labelStyle.Render(cityLabel(city.Name, l.labelW))
 
 	if m.density == densityCompact {
 		return []string{widgets.Pad(label+m.cellsFor(idx, f, hasData, l), m.w)}
@@ -90,7 +141,7 @@ func (m Model) cityRow(idx int, l layout) []string {
 
 	// Expanded: icons, temperatures, precipitation band.
 	var icons, temps, precip strings.Builder
-	icons.WriteString(widgets.Pad(city.Name, l.labelW))
+	icons.WriteString(cityLabel(city.Name, l.labelW))
 	temps.WriteString(widgets.Pad(strings.ToUpper(city.CC), l.labelW))
 	precip.WriteString(strings.Repeat(" ", l.labelW))
 

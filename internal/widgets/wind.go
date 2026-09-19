@@ -27,8 +27,11 @@ func WindArrow(degrees int) string {
 // Arrows are sampled rather than averaged: averaging directions across
 // a bucket is meaningless when they straddle north (350° and 10° would
 // average to 180°, the exact opposite). Speeds are labelled at a
-// readable interval instead of on every column.
-func WindRow(hours []weather.Hour, width int, u units.System) (arrows, speeds string) {
+// readable interval instead of on every column; each label can be
+// coloured by the speed it states, via the same optional hook
+// Sparkline uses. Labels are trimmed to the room they have BEFORE
+// styling — cutting a styled string would split its escape sequence.
+func WindRow(hours []weather.Hour, width int, u units.System, colorize Colorize) (arrows, speeds string) {
 	if width <= 0 {
 		return "", ""
 	}
@@ -56,23 +59,33 @@ func WindRow(hours []weather.Hour, width int, u units.System) (arrows, speeds st
 
 	// Speed labels every 8 columns, left-anchored to their sample.
 	const labelEvery = 8
-	sb := make([]rune, width)
-	for i := range sb {
-		sb[i] = ' '
-	}
-	for col := 0; col < width; col += labelEvery {
-		idx := col * len(hours) / width
+	var sb strings.Builder
+	col := 0
+	for pos := 0; pos < width; pos += labelEvery {
+		if pos < col {
+			// A longer predecessor left no room for this label.
+			continue
+		}
+		idx := pos * len(hours) / width
 		if idx >= len(hours) {
 			idx = len(hours) - 1
 		}
-		label := []rune(u.Speed(hours[idx].WindKPH))
-		for j, r := range label {
-			if col+j >= width {
-				break
-			}
-			sb[col+j] = r
+		kph := hours[idx].WindKPH
+		runes := []rune(u.Speed(kph))
+		if len(runes) > width-pos {
+			runes = runes[:width-pos]
 		}
+		sb.WriteString(strings.Repeat(" ", pos-col))
+		text := string(runes)
+		if colorize != nil {
+			text = colorize(kph).Render(text)
+		}
+		sb.WriteString(text)
+		col = pos + len(runes)
+	}
+	if col < width {
+		sb.WriteString(strings.Repeat(" ", width-col))
 	}
 
-	return Pad(ab.String(), width), Pad(string(sb), width)
+	return Pad(ab.String(), width), sb.String()
 }

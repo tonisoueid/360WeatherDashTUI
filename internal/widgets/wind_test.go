@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -54,18 +55,44 @@ func TestWindRowWidths(t *testing.T) {
 		}
 	}
 	for _, w := range []int{20, 40, 60} {
-		arrows, speeds := WindRow(hours, w, units.Metric)
-		if lipgloss.Width(arrows) != w {
-			t.Errorf("arrows width = %d, want %d (%q)", lipgloss.Width(arrows), w, arrows)
-		}
-		if lipgloss.Width(speeds) != w {
-			t.Errorf("speeds width = %d, want %d (%q)", lipgloss.Width(speeds), w, speeds)
+		// Colourless and colourized rows must both keep the width.
+		for _, hook := range []Colorize{nil, func(float64) lipgloss.Style {
+			return lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
+		}} {
+			arrows, speeds := WindRow(hours, w, units.Metric, hook)
+			if lipgloss.Width(arrows) != w {
+				t.Errorf("arrows width = %d, want %d (%q)", lipgloss.Width(arrows), w, arrows)
+			}
+			if lipgloss.Width(speeds) != w {
+				t.Errorf("speeds width = %d, want %d (%q)", lipgloss.Width(speeds), w, speeds)
+			}
 		}
 	}
 }
 
+// Each speed label must wear the colour of the speed it states, not
+// one colour for the row.
+func TestWindRowColorizesEachLabel(t *testing.T) {
+	calm := lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+	gale := lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
+	hours := []weather.Hour{{WindKPH: 5}, {WindKPH: 75}}
+
+	_, speeds := WindRow(hours, 16, units.Metric, func(kph float64) lipgloss.Style {
+		if kph > 50 {
+			return gale
+		}
+		return calm
+	})
+	if !strings.Contains(speeds, calm.Render("5 km/h")) {
+		t.Errorf("the calm label must wear its own colour:\n%q", speeds)
+	}
+	if !strings.Contains(speeds, gale.Render("75 km/h")) {
+		t.Errorf("the gale label must wear its own colour:\n%q", speeds)
+	}
+}
+
 func TestWindRowEmpty(t *testing.T) {
-	arrows, speeds := WindRow(nil, 10, units.Metric)
+	arrows, speeds := WindRow(nil, 10, units.Metric, nil)
 	if lipgloss.Width(arrows) != 10 || lipgloss.Width(speeds) != 10 {
 		t.Errorf("empty wind row widths = %d,%d; want 10,10",
 			lipgloss.Width(arrows), lipgloss.Width(speeds))

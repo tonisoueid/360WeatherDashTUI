@@ -9,8 +9,14 @@ const (
 	minTermWidth  = 50
 	minTermHeight = 15
 
-	// labelWidth is the city-name column.
-	labelWidth = 12
+	// The city-name column is as wide as the longest name in view
+	// needs, between these two stops. The floor keeps short names from
+	// crowding the day columns; the ceiling keeps one long name from
+	// eating them — a name longer than 18 columns is cut, because a
+	// matrix that loses day columns to a label has its priorities
+	// backwards.
+	minLabelWidth = 12
+	maxLabelWidth = 18
 
 	// gridChromeLines is the day header plus the footer.
 	gridChromeLines = 3
@@ -40,6 +46,25 @@ func (m Model) tooSmall() bool {
 	return m.w < minTermWidth || m.h < minTermHeight
 }
 
+// labelColumnWidth is the width of the city-name column for this
+// frame: the longest name in view, clamped to the floor and ceiling.
+// It is measured over the whole city list, not just the rows on
+// screen, so scrolling does not make the column twitch wider and
+// narrower; names are measured in terminal columns — "Málaga" is 6,
+// not 7 — the same rule Pad enforces when it fills the column.
+func (m Model) labelColumnWidth() int {
+	w := minLabelWidth
+	for _, c := range m.cities {
+		if nw := lipglossWidth(c.Name); nw > w {
+			w = nw
+		}
+	}
+	if w > maxLabelWidth {
+		w = maxLabelWidth
+	}
+	return w
+}
+
 // layout computes the grid geometry for the current window size.
 //
 // When the configured forecast window does not fit, day columns are
@@ -52,7 +77,8 @@ func (m Model) layout() layout {
 		days = 1
 	}
 
-	avail := m.w - labelWidth
+	labelW := m.labelColumnWidth()
+	avail := m.w - labelW
 	if avail < 0 {
 		avail = 0
 	}
@@ -76,7 +102,7 @@ func (m Model) layout() layout {
 	}
 
 	return layout{
-		labelW: labelWidth,
+		labelW: labelW,
 		days:   days,
 		cellW:  cellW,
 		tier:   widgets.TierFor(cellW),

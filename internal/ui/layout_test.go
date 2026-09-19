@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/tsoueid/weatherdash/internal/widgets"
@@ -60,6 +61,50 @@ func TestLayoutRowsRespectDensity(t *testing.T) {
 	}
 	if expanded < 1 {
 		t.Errorf("expanded rows = %d, want at least 1", expanded)
+	}
+}
+
+// The city-name column widens to fit the longest name in view, so a
+// name is never cut when the width is there to give it.
+func TestLabelColumnFitsLongestName(t *testing.T) {
+	m := testModel(t, 2)
+	m.cities[0].Name = "Salt Lake City" // 14 columns
+
+	l := m.layout()
+	if l.labelW != 14 {
+		t.Errorf("labelW = %d, want 14 to fit the longest name", l.labelW)
+	}
+	if out := m.renderGrid(); !strings.Contains(out, "Salt Lake City") {
+		t.Errorf("the full name must render uncut:\n%s", out)
+	}
+}
+
+// The floor holds for short names, and the ceiling keeps one long
+// name from eating the day columns: even at the narrowest usable
+// terminal with the widest label, cells keep their minimum tier.
+func TestLabelColumnFloorAndCeiling(t *testing.T) {
+	m := testModel(t, 2)
+
+	if got := m.labelColumnWidth(); got != minLabelWidth {
+		t.Errorf("short names: labelW = %d, want the %d floor", got, minLabelWidth)
+	}
+
+	m.cities[0].Name = "San Cristóbal de La Laguna" // 26 columns
+	m.w = minTermWidth
+
+	l := m.layout()
+	if l.labelW != maxLabelWidth {
+		t.Errorf("long name: labelW = %d, want the %d ceiling", l.labelW, maxLabelWidth)
+	}
+	if out := m.renderGrid(); !strings.Contains(out, "San Cristóbal de…") {
+		t.Errorf("a name past the ceiling must be cut visibly, with an ellipsis:\n%s", out)
+	}
+	if l.cellW < widgets.TierMinimal.MinWidth() {
+		t.Errorf("cellW = %d, want at least %d beside the widest label",
+			l.cellW, widgets.TierMinimal.MinWidth())
+	}
+	if l.days < minDayColumns {
+		t.Errorf("days = %d, want at least the %d-day floor", l.days, minDayColumns)
 	}
 }
 

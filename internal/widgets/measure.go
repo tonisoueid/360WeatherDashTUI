@@ -12,6 +12,7 @@ package widgets
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -69,6 +70,104 @@ func Truncate(s string, w int) string {
 		used += rw
 	}
 	return b.String()
+}
+
+// CellAt returns the rune displayed at column col of a possibly
+// ANSI-styled line, with escape sequences taking no columns. Reading
+// past either end yields a blank — the same convention Pad's padding
+// implies, so callers can probe without bounds checks.
+func CellAt(s string, col int) rune {
+	if col < 0 {
+		return ' '
+	}
+	c := 0
+	for i := 0; i < len(s); {
+		if s[i] == '\x1b' {
+			j := strings.IndexByte(s[i:], 'm')
+			if j < 0 {
+				return ' '
+			}
+			i += j + 1
+			continue
+		}
+		r, size := utf8.DecodeRuneInString(s[i:])
+		w := lipgloss.Width(string(r))
+		if col >= c && col < c+w {
+			return r
+		}
+		c += w
+		i += size
+	}
+	return ' '
+}
+
+// Splice pastes ins into an ANSI-styled line at column at, cutting the
+// cells it covers out of the original. It is how a modal is overlaid
+// on a rendered frame: ins carries its own escapes and ends in a
+// reset, so the colour that was active at the cut is replayed for the
+// tail of the line and nothing to the right of the insertion loses its
+// hue. The line's width is preserved: exactly Width(ins) columns go.
+func Splice(line string, at int, ins string) string {
+	if at < 0 {
+		at = 0
+	}
+	cut := at + lipgloss.Width(ins)
+
+	var left, right strings.Builder
+	var active []string // SGRs since the last reset
+	var atCut string    // replay for the tail, frozen at the cut
+	frozen := false
+	col := 0
+	for i := 0; i < len(line); {
+		if !frozen && col >= cut {
+			atCut = strings.Join(active, "")
+			frozen = true
+		}
+		if line[i] == '\x1b' {
+			j := strings.IndexByte(line[i:], 'm')
+			if j < 0 {
+				// Unterminated escape: keep the tail verbatim.
+				if col >= cut {
+					right.WriteString(line[i:])
+				} else {
+					left.WriteString(line[i:])
+				}
+				break
+			}
+			end := i + j + 1
+			seq := line[i:end]
+			if seq == "\x1b[0m" {
+				active = active[:0]
+			}
+			active = append(active, seq)
+			switch {
+			case col < at:
+				left.WriteString(seq)
+			case col < cut:
+				// swallowed by the insertion
+			default:
+				right.WriteString(seq)
+			}
+			i = end
+			continue
+		}
+		r, size := utf8.DecodeRuneInString(line[i:])
+		switch {
+		case col < at:
+			left.WriteRune(r)
+		case col < cut:
+			// covered by the insertion
+		default:
+			right.WriteRune(r)
+		}
+		col += lipgloss.Width(string(r))
+		i += size
+	}
+	out := left.String() + ins
+	if right.Len() > 0 {
+		out += atCut + right.String()
+	}
+	return out
 }
 
 // Resample maps vals onto exactly n points.

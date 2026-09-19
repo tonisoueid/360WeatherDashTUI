@@ -101,8 +101,9 @@ type Model struct {
 	lastErr    error
 	backoffTil time.Time
 
-	// confirmDelete arms the two-press delete. Deleting a city is cheap
-	// to redo but annoying to discover, so it takes two presses.
+	// confirmDelete holds the delete-confirmation modal open over the
+	// grid. Deleting a city is cheap to redo but annoying to discover
+	// was gone, so it asks first.
 	confirmDelete bool
 
 	// filtering is true while the filter input has the keyboard.

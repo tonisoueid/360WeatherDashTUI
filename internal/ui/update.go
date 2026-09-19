@@ -216,8 +216,16 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if m.confirmDelete && !key.Matches(msg, m.keys.Delete) {
+	// While the delete modal is up it owns the keyboard: enter or y
+	// confirms, anything else — esc included — cancels.
+	if m.confirmDelete {
 		m.confirmDelete = false
+		switch {
+		case key.Matches(msg, m.keys.Delete), key.Matches(msg, m.keys.Enter), msg.String() == "y":
+			m = m.deleteSelectedCity()
+			return m, saveConfigCmd(m.configPath, m.cfg)
+		}
+		return m, nil
 	}
 
 	switch {
@@ -249,15 +257,12 @@ func (m Model) handleGridKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, textinput.Blink
 
 	case key.Matches(msg, m.keys.Delete):
-		if !m.confirmDelete {
-			// Deleting a city is cheap to redo but annoying to
-			// discover, so it takes two presses rather than one.
+		// Deleting a city is destructive, so it asks first — the
+		// modal in the middle of the grid, confirm or cancel.
+		if len(m.cities) > 0 {
 			m.confirmDelete = true
-			return m, nil
 		}
-		m.confirmDelete = false
-		m = m.deleteSelectedCity()
-		return m, saveConfigCmd(m.configPath, m.cfg)
+		return m, nil
 
 	case key.Matches(msg, m.keys.Sort):
 		m.sortMode = m.sortMode.Next()

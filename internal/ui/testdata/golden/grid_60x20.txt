@@ -17,4 +17,4 @@
                                                             
                                                             
                                                             
- [38;5;240mno data yet[0m                                                
+ [1;38;5;240mno data yet[0m                                                

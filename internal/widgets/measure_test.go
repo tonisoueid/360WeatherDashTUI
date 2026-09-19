@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
@@ -93,5 +94,58 @@ func TestResampleEdgeCases(t *testing.T) {
 	}
 	if got := Resample([]float64{1, 2}, 0); len(got) != 0 {
 		t.Errorf("Resample(_, 0) = %v, want empty", got)
+	}
+}
+
+func TestSplicePreservesWidthAndStyle(t *testing.T) {
+	line := "\x1b[31mRed\x1b[0m tail"
+	got := Splice(line, 1, "XY")
+	if w := lipgloss.Width(got); w != lipgloss.Width(line) {
+		t.Errorf("Splice width = %d, want %d: %q", w, lipgloss.Width(line), got)
+	}
+	// The covered cells are gone, the tail keeps its colour by
+	// replaying the active SGR after the insertion.
+	if !strings.HasPrefix(got, "\x1b[31mR") {
+		t.Errorf("the left side must keep its prefix: %q", got)
+	}
+	if !strings.Contains(got, "XY") || strings.Contains(got, "ed tail") {
+		t.Errorf("the covered cells must be replaced: %q", got)
+	}
+	if !strings.Contains(got, "XY\x1b[31m\x1b[0m tail") {
+		t.Errorf("the tail must replay the colour active at the cut: %q", got)
+	}
+}
+
+func TestSplicePlainLines(t *testing.T) {
+	got := Splice("abcdef", 2, "XY")
+	if got != "abXYef" {
+		t.Errorf("Splice plain = %q, want abXYef", got)
+	}
+	if got := Splice("abc", 5, "Z"); got != "abcZ" {
+		t.Errorf("Splice past the end = %q, want abcZ", got)
+	}
+}
+
+func TestCellAt(t *testing.T) {
+	if got := CellAt("abc", 1); got != 'b' {
+		t.Errorf("CellAt plain = %q, want 'b'", got)
+	}
+	// Escape sequences take no columns.
+	styled := "\x1b[31mab\x1b[0mc"
+	if got := CellAt(styled, 0); got != 'a' {
+		t.Errorf("CellAt styled col 0 = %q, want 'a'", got)
+	}
+	if got := CellAt(styled, 2); got != 'c' {
+		t.Errorf("CellAt styled col 2 = %q, want 'c'", got)
+	}
+	// Out-of-range columns read as blank, not garbage.
+	if got := CellAt("ab", 5); got != ' ' {
+		t.Errorf("CellAt past end = %q, want blank", got)
+	}
+	if got := CellAt("ab", -1); got != ' ' {
+		t.Errorf("CellAt before start = %q, want blank", got)
+	}
+	if got := CellAt("", 0); got != ' ' {
+		t.Errorf("CellAt empty = %q, want blank", got)
 	}
 }

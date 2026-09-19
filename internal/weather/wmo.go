@@ -47,67 +47,73 @@ func ParseIconSet(s string) (IconSet, error) {
 // emoji are not used here.
 func IconWidth(set IconSet) int { return 1 }
 
-// condition groups WMO codes into the buckets we actually render.
-type condition int
+// Condition groups WMO codes into the buckets we actually render. It
+// is exported so the UI can key presentation — the colour people
+// expect a condition to wear — off the same buckets the glyphs use.
+type Condition int
 
 const (
-	condClear condition = iota
-	condPartly
-	condCloudy
-	condFog
-	condDrizzle
-	condRain
-	condSnow
-	condShowers
-	condThunder
-	condUnknown
+	CondClear Condition = iota
+	CondPartly
+	CondCloudy
+	CondFog
+	CondDrizzle
+	CondRain
+	CondSnow
+	CondShowers
+	CondThunder
+	CondUnknown
 )
 
 // classify maps a WMO code to a render bucket.
 // Reference: WMO 4677 present-weather codes as used by Open-Meteo.
-func classify(code int) condition {
+func classify(code int) Condition {
 	switch code {
 	case 0:
-		return condClear
+		return CondClear
 	case 1, 2:
-		return condPartly
+		return CondPartly
 	case 3:
-		return condCloudy
+		return CondCloudy
 	case 45, 48:
-		return condFog
+		return CondFog
 	case 51, 53, 55, 56, 57:
-		return condDrizzle
+		return CondDrizzle
 	case 61, 63, 65, 66, 67:
-		return condRain
+		return CondRain
 	case 71, 73, 75, 77:
-		return condSnow
+		return CondSnow
 	case 80, 81, 82, 85, 86:
-		return condShowers
+		return CondShowers
 	case 95, 96, 99:
-		return condThunder
+		return CondThunder
 	default:
-		return condUnknown
+		return CondUnknown
 	}
 }
+
+// Cond classifies a WMO code into its render bucket, for callers that
+// key colour or phrasing off the bucket rather than the glyph.
+func Cond(code int) Condition { return classify(code) }
 
 // Glyph tables, indexed by condition. Every entry is one cell wide.
 var (
 	asciiGlyphs = [...]string{
-		condClear: "O", condPartly: "o", condCloudy: "=", condFog: "~",
-		condDrizzle: ".", condRain: "/", condSnow: "*", condShowers: ":",
-		condThunder: "!", condUnknown: "?",
+		CondClear: "O", CondPartly: "o", CondCloudy: "=", CondFog: "~",
+		CondDrizzle: ".", CondRain: "/", CondSnow: "*", CondShowers: ":",
+		CondThunder: "!", CondUnknown: "?",
 	}
 	unicodeGlyphs = [...]string{
-		condClear: "☀", condPartly: "◑", condCloudy: "☁", condFog: "≡",
-		condDrizzle: "⋮", condRain: "☂", condSnow: "❄", condShowers: "⋰",
-		condThunder: "☈", condUnknown: "?",
+		CondClear: "☀", CondPartly: "◑", CondCloudy: "☁", CondFog: "≡",
+		CondDrizzle: "⋮", CondRain: "☂", CondSnow: "❄", CondShowers: "⋰",
+		CondThunder: "☈", CondUnknown: "?",
 	}
 	// Nerd Font Weather range (nf-weather-*).
 	nerdGlyphs = [...]string{
-		condClear: "", condPartly: "", condCloudy: "",
-		condFog: "", condDrizzle: "", condRain: "",
-		condSnow: "", condShowers: "", condThunder: "",
-		condUnknown: "",
+		CondClear: "", CondPartly: "", CondCloudy: "",
+		CondFog: "", CondDrizzle: "", CondRain: "",
+		CondSnow: "", CondShowers: "", CondThunder: "",
+		CondUnknown: "",
 	}
 )
 
@@ -122,6 +128,45 @@ func Icon(code int, set IconSet) string {
 	default:
 		return unicodeGlyphs[c]
 	}
+}
+
+// LegendEntry is one row of an icon legend: a condition glyph exactly
+// as the grid renders it, its meaning in a word or two, and the
+// condition bucket so callers can key presentation off it.
+type LegendEntry struct {
+	Glyph   string
+	Meaning string
+	Cond    Condition
+}
+
+// legendMeanings glosses each condition bucket, indexed like the glyph
+// tables. One or two words each: a legend that needs a sentence is a
+// detail screen, not a legend.
+var legendMeanings = [...]string{
+	CondClear: "clear", CondPartly: "partly cloudy", CondCloudy: "overcast",
+	CondFog: "fog", CondDrizzle: "drizzle", CondRain: "rain",
+	CondSnow: "snow", CondShowers: "showers", CondThunder: "thunderstorm",
+	CondUnknown: "unknown",
+}
+
+// IconLegend returns every glyph in the set with its meaning, in bucket
+// order from clear to unknown, so a help screen can teach the grid's
+// icon vocabulary without duplicating the glyph tables.
+func IconLegend(set IconSet) []LegendEntry {
+	var glyphs *[len(legendMeanings)]string
+	switch set {
+	case IconsASCII:
+		glyphs = &asciiGlyphs
+	case IconsNerd:
+		glyphs = &nerdGlyphs
+	default:
+		glyphs = &unicodeGlyphs
+	}
+	out := make([]LegendEntry, len(glyphs))
+	for c, g := range glyphs {
+		out[c] = LegendEntry{Glyph: g, Meaning: legendMeanings[c], Cond: Condition(c)}
+	}
+	return out
 }
 
 // labels are the human-readable condition names shown in the detail

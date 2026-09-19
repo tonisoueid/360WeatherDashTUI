@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 func TestFooterWidthIsExact(t *testing.T) {
@@ -57,6 +58,48 @@ func TestFooterNeverFetched(t *testing.T) {
 	if got := lipgloss.Width(m.footer(80)); got != 80 {
 		t.Errorf("width = %d, want 80", got)
 	}
+}
+
+func TestFooterHintsBoldOneColorPerFunction(t *testing.T) {
+	// go test stdout is not a TTY, so lipgloss would strip styling;
+	// pin the profile and restore it for the tests that follow.
+	prev := lipgloss.ColorProfile()
+	defer lipgloss.SetColorProfile(prev)
+	lipgloss.SetColorProfile(termenv.ANSI256)
+
+	m := testModel(t, 3)
+	got := m.footer(120)
+
+	functions := []string{"↑↓ city", "←→ day", "⏎ zoom", "a add", "/ filter", "s sort", "? help"}
+	seen := map[string]string{}
+	for _, fn := range functions {
+		if !strings.Contains(got, fn) {
+			t.Errorf("footer = %q, want a hint for %q", got, fn)
+			continue
+		}
+		sgr := sgrBefore(got, fn)
+		if !strings.HasPrefix(sgr, "\x1b[1;") {
+			t.Errorf("hint %q rendered with %q, want bold", fn, sgr)
+		}
+		if other, dup := seen[sgr]; dup {
+			t.Errorf("hints %q and %q share %q, want one colour per function", other, fn, sgr)
+		}
+		seen[sgr] = fn
+	}
+}
+
+// sgrBefore returns the escape sequence immediately preceding the first
+// occurrence of substr in s — i.e. the style a rendered run starts with.
+func sgrBefore(s, substr string) string {
+	i := strings.Index(s, substr)
+	if i < 0 {
+		return ""
+	}
+	j := strings.LastIndex(s[:i], "\x1b[")
+	if j < 0 {
+		return ""
+	}
+	return s[j:i]
 }
 
 func TestHumanAge(t *testing.T) {

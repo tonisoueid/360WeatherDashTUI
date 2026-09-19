@@ -2,7 +2,10 @@ package ui
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/tsoueid/weatherdash/internal/store"
 	"github.com/tsoueid/weatherdash/internal/weather"
@@ -131,5 +134,46 @@ func TestDeleteConfirmationCancels(t *testing.T) {
 	}
 	if len(m.cities) != 3 {
 		t.Errorf("got %d cities, want 3", len(m.cities))
+	}
+}
+
+// The confirmation is a modal in the middle of the grid: the city is
+// named, the keys are spelled out, and the frame's geometry survives
+// the overlay.
+func TestDeleteModalRendersCentered(t *testing.T) {
+	m := send(testModel(t, 3), "d")
+	out := m.View()
+
+	if !strings.Contains(out, "Delete Paris?") {
+		t.Errorf("the modal must name the city:\n%s", out)
+	}
+	if !strings.Contains(out, "enter or y delete · esc cancels") {
+		t.Errorf("the modal must spell out confirm and cancel:\n%s", out)
+	}
+	for i, line := range strings.Split(out, "\n") {
+		if got := lipgloss.Width(line); got != m.w {
+			t.Errorf("line %d width = %d, want %d: %q", i, got, m.w, line)
+		}
+	}
+}
+
+func TestDeleteModalConfirmKeys(t *testing.T) {
+	for _, confirm := range []string{"enter", "y", "d"} {
+		m := send(testModel(t, 3), "d")
+		m.configPath = ""
+		m = send(m, confirm)
+		if len(m.cities) != 2 {
+			t.Errorf("%s must confirm the delete, got %d cities", confirm, len(m.cities))
+		}
+		if m.confirmDelete {
+			t.Errorf("%s must close the modal", confirm)
+		}
+	}
+
+	// Any other key cancels and deletes nothing.
+	m := send(testModel(t, 3), "d", "x")
+	if m.confirmDelete || len(m.cities) != 3 {
+		t.Errorf("a stray key must cancel the modal, got %d cities, open=%v",
+			len(m.cities), m.confirmDelete)
 	}
 }

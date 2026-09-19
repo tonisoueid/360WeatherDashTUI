@@ -1,6 +1,7 @@
 package weather
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
@@ -57,6 +58,36 @@ func TestLabels(t *testing.T) {
 func TestLabelUnknownCode(t *testing.T) {
 	if got := Label(12345); got != "Unknown" {
 		t.Errorf("Label(12345) = %q, want Unknown", got)
+	}
+}
+
+func TestIconLegend(t *testing.T) {
+	// One representative code per condition bucket, in bucket order.
+	repCodes := []int{0, 1, 3, 45, 51, 61, 71, 80, 95, 12345}
+
+	for _, set := range []IconSet{IconsASCII, IconsUnicode, IconsNerd} {
+		legend := IconLegend(set)
+		if len(legend) != len(repCodes) {
+			t.Fatalf("IconLegend(%v) has %d entries, want %d", set, len(legend), len(repCodes))
+		}
+		seen := map[string]bool{}
+		for i, e := range legend {
+			if want := Icon(repCodes[i], set); e.Glyph != want {
+				t.Errorf("IconLegend(%v)[%d].Glyph = %q, want Icon(%d) = %q",
+					set, i, e.Glyph, repCodes[i], want)
+			}
+			if want := classify(repCodes[i]); e.Cond != want {
+				t.Errorf("IconLegend(%v)[%d].Cond = %v, want %v (code %d)",
+					set, i, e.Cond, want, repCodes[i])
+			}
+			if words := strings.Count(e.Meaning, " ") + 1; words > 2 {
+				t.Errorf("meaning %q is %d words, want one or two", e.Meaning, words)
+			}
+			if seen[e.Meaning] {
+				t.Errorf("duplicate meaning %q in %v legend", e.Meaning, set)
+			}
+			seen[e.Meaning] = true
+		}
 	}
 }
 
