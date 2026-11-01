@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working with code in this repository.
 
 ## Project
 
@@ -130,7 +130,7 @@ weatherdash always opens on the grid.
   styled half-blocks, the same row-pairing technique `flags.go`'s `flagLines` uses.
 - **The glyph carries the land/sea shape, colour is layered on top.** Unlike a flag (many
   hues, one glyph), a map only has two terrain colours, so `mapRasterGlyph` picks
-  `█`/`▀`/`▄`/` ` from the actual land pattern. A monochrome terminal that strips all
+  `█`/`▀`/`▄`/ ` ` from the actual land pattern. A monochrome terminal that strips all
   styling still shows a coastline; a flag rendered the same way would not.
 - **`detailReturn`** (alongside the older `helpReturn`) tracks which screen `⏎` was pressed
   on, so `esc` from detail surfaces back to the map when that's where the zoom started,
