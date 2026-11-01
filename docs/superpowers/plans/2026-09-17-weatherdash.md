@@ -58,7 +58,7 @@ Every task's requirements implicitly include this section.
 - [ ] **Step 1: Initialise the repository and module**
 
 ```bash
-cd /home/tsoueid/aiexperiments/weather_console_tui
+cd <repo root>
 git init
 go mod init github.com/tsoueid/weatherdash
 ```

@@ -1,4 +1,14 @@
+# Build output
 /weatherdash
 /dist/
 *.out
+*.test
+
+# Local editor / OS cruft
 .DS_Store
+.idea/
+.vscode/
+
+# Local AI-tool state (not part of the project)
+.commandcode/
+.remember/
