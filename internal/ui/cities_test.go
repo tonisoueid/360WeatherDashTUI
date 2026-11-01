@@ -7,8 +7,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/store"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/store"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 func TestAddCityAppendsAndSyncsConfig(t *testing.T) {

@@ -13,11 +13,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/geocode"
-	"github.com/tsoueid/360WeatherDashTUI/internal/store"
-	"github.com/tsoueid/360WeatherDashTUI/internal/ui"
-	"github.com/tsoueid/360WeatherDashTUI/internal/version"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/geocode"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/store"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/ui"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/version"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // mapTestModel is testModel plus real coordinates on every city, since

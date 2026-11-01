@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // renderAddCity draws the city search modal.

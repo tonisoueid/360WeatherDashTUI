@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/units"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
-	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/units"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // detailGutter is the left margin for labelled rows.

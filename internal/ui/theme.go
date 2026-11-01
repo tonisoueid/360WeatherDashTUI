@@ -3,7 +3,7 @@ package ui
 import (
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 // theme holds the styles used across screens. Styles live here rather

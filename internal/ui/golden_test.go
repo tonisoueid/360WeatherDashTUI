@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/widgets"
 )
 
 var update = flag.Bool("update", false, "rewrite golden files")

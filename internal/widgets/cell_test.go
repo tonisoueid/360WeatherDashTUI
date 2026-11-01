@@ -7,8 +7,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
-	"github.com/tsoueid/360WeatherDashTUI/internal/units"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/units"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 // sampleDay sets Date deliberately: a zero Date is Cell's signal for

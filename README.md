@@ -37,7 +37,7 @@ Zoom into a day for the hourly picture, or switch to a world map of all your cit
 Requires Go 1.26 or later:
 
 ```bash
-go install github.com/tsoueid/360WeatherDashTUI/cmd/weatherdash@latest
+go install github.com/tonisoueid/360WeatherDashTUI/cmd/weatherdash@latest
 ```
 
 Or build from a checkout:

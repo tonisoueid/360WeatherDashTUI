@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // humanAge renders a duration the way a person would say it.

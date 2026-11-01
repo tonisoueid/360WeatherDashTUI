@@ -1,4 +1,4 @@
-module github.com/tsoueid/360WeatherDashTUI
+module github.com/tonisoueid/360WeatherDashTUI
 
 go 1.25.0
 

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/widgets"
 )
 
 func TestLayoutTiersByWidth(t *testing.T) {

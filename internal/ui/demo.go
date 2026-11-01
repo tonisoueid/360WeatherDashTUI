@@ -4,8 +4,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/store"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/store"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 // demoCity is one synthetic location plus the shape of its weather.

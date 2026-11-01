@@ -7,10 +7,10 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/geocode"
-	"github.com/tsoueid/360WeatherDashTUI/internal/store"
-	"github.com/tsoueid/360WeatherDashTUI/internal/units"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/geocode"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/store"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/units"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 // screen is the active view. Screens share one cursor; they are

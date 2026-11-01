@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/tsoueid/360WeatherDashTUI/internal/geocode"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/geocode"
 )
 
 func parisResults() []geocode.Place {

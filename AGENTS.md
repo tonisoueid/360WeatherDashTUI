@@ -6,7 +6,7 @@ This file provides guidance to coding agents working with code in this repositor
 
 `weatherdash` — a single-binary Bubble Tea TUI whose home screen is a **cities × days
 weather matrix**. Any cell zooms into that city's hourly detail for that day. Data comes
-from Open-Meteo (no API key). Module path: `github.com/tsoueid/360WeatherDashTUI`.
+from Open-Meteo (no API key). Module path: `github.com/tonisoueid/360WeatherDashTUI`.
 
 Authoritative background, both worth reading before non-trivial work:
 

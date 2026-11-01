@@ -3,8 +3,8 @@ package ui
 import (
 	"time"
 
-	"github.com/tsoueid/360WeatherDashTUI/internal/geocode"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/geocode"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 // forecastsMsg is the result of one batched fetch.

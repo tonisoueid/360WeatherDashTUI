@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tonisoueid/360WeatherDashTUI/internal/weather"
 )
 
 // Forecast window bounds. Open-Meteo supports up to 16 days; fewer than

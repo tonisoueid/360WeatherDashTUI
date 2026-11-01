@@ -1,6 +1,6 @@
 package ui
 
-import "github.com/tsoueid/360WeatherDashTUI/internal/widgets"
+import "github.com/tonisoueid/360WeatherDashTUI/internal/widgets"
 
 const (
 	// minTermWidth is the narrowest terminal the matrix is usable in.
