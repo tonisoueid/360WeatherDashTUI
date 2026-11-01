@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // CacheVersion is bumped whenever the cached shape changes. A mismatch

@@ -8,8 +8,8 @@ import (
 	// keeps the test binary hermetic on systems without /usr/share/zoneinfo.
 	_ "time/tzdata"
 
-	"github.com/tsoueid/weatherdash/internal/store"
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/store"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 func TestSortModeCycles(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 func TestCacheRoundTrip(t *testing.T) {

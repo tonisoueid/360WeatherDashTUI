@@ -3,8 +3,8 @@ package widgets
 import (
 	"strings"
 
-	"github.com/tsoueid/weatherdash/internal/units"
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/units"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // windArrows are indexed by 45° sector, starting at "going north".

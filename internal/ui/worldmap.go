@@ -7,8 +7,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
-	"github.com/tsoueid/weatherdash/internal/widgets"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // mapSeaColor and mapLandColor are the world map's basemap: dim and

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tsoueid/weatherdash/internal/store"
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/store"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 var errTest = errors.New("search failed")

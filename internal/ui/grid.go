@@ -7,8 +7,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
-	"github.com/tsoueid/weatherdash/internal/widgets"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // renderGrid draws the matrix screen: a pinned day header above a

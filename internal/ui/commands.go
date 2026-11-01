@@ -7,9 +7,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/tsoueid/weatherdash/internal/geocode"
-	"github.com/tsoueid/weatherdash/internal/store"
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/geocode"
+	"github.com/tsoueid/360WeatherDashTUI/internal/store"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // fetchTimeout bounds one batched request. Twenty cities is a single

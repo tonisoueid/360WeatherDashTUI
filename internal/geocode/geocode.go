@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // DefaultBaseURL is the Open-Meteo geocoding search endpoint.

@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/tsoueid/weatherdash/internal/widgets"
+	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // View dispatches to the active screen's renderer.

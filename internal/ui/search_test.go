@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tsoueid/weatherdash/internal/geocode"
+	"github.com/tsoueid/360WeatherDashTUI/internal/geocode"
 )
 
 func TestDebounceCmdCarriesSeqAndQuery(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tsoueid/weatherdash/internal/units"
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/units"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // Tier is how much detail a grid cell shows. Narrow terminals drop to

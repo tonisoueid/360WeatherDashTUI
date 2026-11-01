@@ -7,8 +7,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/tsoueid/weatherdash/internal/store"
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/store"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // duplicateRadius is how close two coordinates must be to count as the

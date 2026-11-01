@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // fakeProvider records what it was asked for and returns canned data.

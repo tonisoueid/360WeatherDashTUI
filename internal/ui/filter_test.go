@@ -3,7 +3,7 @@ package ui
 import (
 	"testing"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 func TestMatchesFilter(t *testing.T) {

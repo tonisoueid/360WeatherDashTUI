@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/tsoueid/weatherdash/internal/widgets"
+	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // Every line of the grid must be exactly the terminal width, or the

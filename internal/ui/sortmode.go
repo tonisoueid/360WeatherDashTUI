@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
 )
 
 // sortMode is how the city axis is ordered.

@@ -1,4 +1,4 @@
-module github.com/tsoueid/weatherdash
+module github.com/tsoueid/360WeatherDashTUI
 
 go 1.25.0
 

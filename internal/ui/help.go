@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tsoueid/weatherdash/internal/weather"
-	"github.com/tsoueid/weatherdash/internal/widgets"
+	"github.com/tsoueid/360WeatherDashTUI/internal/weather"
+	"github.com/tsoueid/360WeatherDashTUI/internal/widgets"
 )
 
 // helpGroups names each row returned by keyMap.FullHelp.

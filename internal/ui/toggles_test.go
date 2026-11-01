@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tsoueid/weatherdash/internal/units"
+	"github.com/tsoueid/360WeatherDashTUI/internal/units"
 )
 
 func TestUnitsToggle(t *testing.T) {
