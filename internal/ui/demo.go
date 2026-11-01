@@ -92,5 +92,9 @@ func DemoModel() Model {
 		}
 	}
 
-	return New(cfg, cache)
+	m := New(cfg, cache)
+	// The demo data was generated this instant; say so in the footer
+	// instead of leaving the pre-first-fetch "no data yet" on screen.
+	m.lastOK = time.Now()
+	return m
 }

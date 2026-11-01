@@ -58,6 +58,7 @@ func goldenModel(t *testing.T, w, h int) Model {
 	m := DemoModel()
 	m.w, m.h = w, h
 	m.nowFunc = func() time.Time { return goldenClock }
+	m.lastOK = goldenClock // "updated just now" stays deterministic
 	return m
 }
 

@@ -132,11 +132,11 @@ func (m Model) footerWith(width int, th theme, hs []footerHint) string {
 		status = m.spinner.View() + th.footerText.Render(" refreshing…")
 	case m.lastErr != nil && !m.lastOK.IsZero():
 		status = th.warn.Bold(true).Render(
-			fmt.Sprintf("⚠ stale %s · %s", humanAge(time.Since(m.lastOK)), errSummary(m.lastErr)))
+			fmt.Sprintf("⚠ stale %s · %s", humanAge(m.now().Sub(m.lastOK)), errSummary(m.lastErr)))
 	case m.lastErr != nil:
 		status = th.warn.Bold(true).Render("⚠ " + errSummary(m.lastErr))
 	case !m.lastOK.IsZero():
-		status = th.dim.Bold(true).Render("updated " + humanAge(time.Since(m.lastOK)))
+		status = th.dim.Bold(true).Render("updated " + humanAge(m.now().Sub(m.lastOK)))
 	default:
 		status = th.dim.Bold(true).Render("no data yet")
 	}
