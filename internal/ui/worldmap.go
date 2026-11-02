@@ -350,21 +350,24 @@ func (m Model) mapStatusLine(skipped int) string {
 	if !ok {
 		return widgets.Pad(th.label.Render(" "+day), m.w)
 	}
+	// The day rides right beside the city name so it survives narrow
+	// widths (a right-aligned label was the first thing dropped).
+	who := c.Full() + " · " + day
 
 	var body string
 	f, has := m.data[c.ID]
 	switch {
 	case !has:
-		body = fmt.Sprintf("▸ %s   no data yet", c.Full())
+		body = fmt.Sprintf("▸ %s   no data yet", who)
 	case m.cursorDay == 0:
-		body = fmt.Sprintf("▸ %s   %s %s %s", c.Full(),
+		body = fmt.Sprintf("▸ %s   %s %s %s", who,
 			weather.Icon(f.Current.Code, m.icons), m.units.Temp(f.Current.TempC), weather.Label(f.Current.Code))
 	case m.cursorDay < len(f.Days):
 		d := f.Days[m.cursorDay]
-		body = fmt.Sprintf("▸ %s   %s %s / %s %s", c.Full(),
+		body = fmt.Sprintf("▸ %s   %s %s / %s %s", who,
 			weather.Icon(d.Code, m.icons), m.units.Temp(d.HiC), m.units.Temp(d.LoC), weather.Label(d.Code))
 	default:
-		body = fmt.Sprintf("▸ %s   no data for %s", c.Full(), day)
+		body = fmt.Sprintf("▸ %s   no data for this day", who)
 	}
 	if skipped == 1 {
 		body += " · 1 city has no coordinates"
@@ -372,11 +375,5 @@ func (m Model) mapStatusLine(skipped int) string {
 		body += fmt.Sprintf(" · %d cities have no coordinates", skipped)
 	}
 
-	line := th.labelSel.Render(" " + body)
-	right := th.dim.Render(day)
-	gap := m.w - lipglossWidth(line) - lipglossWidth(right) - 1
-	if gap < 1 {
-		return widgets.Pad(line, m.w)
-	}
-	return widgets.Pad(line+strings.Repeat(" ", gap)+right, m.w)
+	return widgets.Pad(th.labelSel.Render(" "+body), m.w)
 }
