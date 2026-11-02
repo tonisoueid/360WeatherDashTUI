@@ -413,8 +413,14 @@ func TestRenderDetailTempBounds(t *testing.T) {
 	lines := strings.Split(m.renderDetail(), "\n")
 	hiRow, loRow := "", ""
 	for i, l := range lines {
-		if strings.HasPrefix(strings.TrimLeft(l, " "), "Temp ") && i+2 < len(lines) {
-			hiRow, loRow = l, lines[i+2]
+		if strings.HasPrefix(strings.TrimLeft(l, " "), "Temp ") {
+			hiRow = l
+			for j := i + 1; j < len(lines); j++ {
+				if strings.Contains(lines[j], "─") {
+					loRow = lines[j]
+					break
+				}
+			}
 		}
 	}
 	if hiRow == "" {
@@ -657,5 +663,79 @@ func TestRenderDetailRulerNarrowWidthHonest(t *testing.T) {
 	}
 	if hours < 8 {
 		t.Errorf("a 60-column ruler must still label a good span of hours, got %d:\n%q", hours, rulerRow)
+	}
+}
+
+// bandHeight counts the lines between the Temp rule and the low rule.
+func bandHeight(t *testing.T, m Model) int {
+	t.Helper()
+	lines := strings.Split(m.renderDetail(), "\n")
+	for i, l := range lines {
+		if strings.HasPrefix(strings.TrimLeft(l, " "), "Temp ") {
+			for j := i + 1; j < len(lines); j++ {
+				if strings.Contains(lines[j], "─") {
+					return j - i - 1
+				}
+			}
+		}
+	}
+	t.Fatalf("no Temp section:\n%s", strings.Join(lines, "\n"))
+	return 0
+}
+
+func TestRenderDetailTempBandTriplesWhenTall(t *testing.T) {
+	m := testModel(t, 3)
+	m.screen = screenDetail
+	m.w, m.h = 100, 50
+	if got := bandHeight(t, m); got != 3 {
+		t.Errorf("tall band height = %d, want 3", got)
+	}
+	for i, line := range strings.Split(m.renderDetail(), "\n") {
+		if got := lipgloss.Width(line); got != m.w {
+			t.Errorf("line %d width = %d, want %d", i, got, m.w)
+		}
+	}
+	if n := len(strings.Split(m.renderDetail(), "\n")); n != m.h {
+		t.Errorf("frame has %d lines, want %d", n, m.h)
+	}
+}
+
+func TestRenderDetailTempBandStaysOneRowWhenShort(t *testing.T) {
+	m := testModel(t, 3)
+	m.screen = screenDetail
+	m.w, m.h = 80, 16
+	if got := bandHeight(t, m); got != 1 {
+		t.Errorf("short band height = %d, want 1", got)
+	}
+}
+
+// The band grows only when the whole frame still fits: the first
+// height that fits is the threshold, and one line less keeps 1 row.
+func TestRenderDetailTempBandThreshold(t *testing.T) {
+	m := testModel(t, 3)
+	m.screen = screenDetail
+	m.w = 100
+	grew := 0
+	for h := 15; h <= 40; h++ {
+		m.h = h
+		if bandHeight(t, m) == 3 {
+			grew = h
+			break
+		}
+	}
+	if grew == 0 {
+		t.Fatal("band never grew")
+	}
+	m.h = grew - 1
+	if got := bandHeight(t, m); got != 1 {
+		t.Errorf("height %d: band = %d, want 1", m.h, got)
+	}
+	if grew < 15 {
+		t.Errorf("unexpected threshold %d", grew)
+	}
+	m.h = grew
+	lines := strings.Split(m.renderDetail(), "\n")
+	if len(lines) != grew {
+		t.Errorf("frame = %d lines, want %d", len(lines), grew)
 	}
 }

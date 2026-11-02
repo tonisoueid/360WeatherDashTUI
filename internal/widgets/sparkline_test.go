@@ -255,3 +255,38 @@ func TestPrecipAmountsEmpty(t *testing.T) {
 		t.Errorf("PrecipAmounts(_, 0) = %q, want empty", got)
 	}
 }
+
+func TestSparklineRowsWidthsAndHeight(t *testing.T) {
+	vals := []float64{1, 5, 9, 3, 7, 2}
+	for _, w := range []int{1, 6, 24, 40} {
+		got := SparklineRows(vals, w, 3, nil)
+		if len(got) != 3 {
+			t.Fatalf("rows = %d, want 3", len(got))
+		}
+		for _, l := range got {
+			if lipgloss.Width(l) != w {
+				t.Errorf("width %d: line %q has width %d", w, l, lipgloss.Width(l))
+			}
+		}
+	}
+}
+
+func TestSparklineRowsShape(t *testing.T) {
+	// 24 levels over 3 rows: min is blank above the bottom sliver,
+	// max is a full column.
+	got := SparklineRows([]float64{0, 23}, 2, 3, nil)
+	want := []string{" █", " █", "▁█"}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("row %d = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestSparklineRowsOneRowMatchesSparkline(t *testing.T) {
+	vals := []float64{3, 1, 4, 1, 5}
+	got := SparklineRows(vals, 5, 1, nil)
+	if len(got) != 1 || got[0] != Sparkline(vals, 5, nil) {
+		t.Errorf("got %q", got)
+	}
+}
