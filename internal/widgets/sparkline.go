@@ -224,3 +224,71 @@ func numberRow(width, samples int, at func(i int) (text string, value float64), 
 	}
 	return b.String()
 }
+
+// SparklineRows is Sparkline drawn rows lines tall, top line first,
+// each exactly width columns wide. The series is normalised the same
+// way, but across 8*rows levels: a column is full blocks in the lines
+// below its level, one ramp glyph in the line its level falls in, and
+// blank above. rows <= 1 returns the single Sparkline line.
+func SparklineRows(vals []float64, width, rows int, c Colorize) []string {
+	if rows <= 1 {
+		return []string{Sparkline(vals, width, c)}
+	}
+	if width <= 0 {
+		return make([]string, rows)
+	}
+	pts := Resample(vals, width)
+	out := make([]string, rows)
+	if len(pts) == 0 {
+		for i := range out {
+			out[i] = strings.Repeat(" ", width)
+		}
+		return out
+	}
+
+	min, max := pts[0], pts[0]
+	for _, v := range pts {
+		if v < min {
+			min = v
+		}
+		if v > max {
+			max = v
+		}
+	}
+	levels := len(sparkRamp) * rows
+	span := max - min
+
+	bs := make([]strings.Builder, rows)
+	for _, v := range pts {
+		idx := (levels - 1) / 2
+		if span != 0 {
+			idx = int((v - min) / span * float64(levels-1))
+		}
+		if idx < 0 {
+			idx = 0
+		}
+		if idx >= levels {
+			idx = levels - 1
+		}
+		for r := 0; r < rows; r++ { // r counts from the bottom
+			var ch string
+			switch lo := r * len(sparkRamp); {
+			case idx >= lo+len(sparkRamp):
+				ch = string(sparkRamp[len(sparkRamp)-1])
+			case idx >= lo:
+				ch = string(sparkRamp[idx-lo])
+			default:
+				bs[rows-1-r].WriteString(" ")
+				continue
+			}
+			if c != nil {
+				ch = c(v).Render(ch)
+			}
+			bs[rows-1-r].WriteString(ch)
+		}
+	}
+	for i := range out {
+		out[i] = bs[i].String()
+	}
+	return out
+}

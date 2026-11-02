@@ -222,11 +222,18 @@ func (m Model) renderDetail() string {
 	// The temperature chart rides between its bounds: the day's high
 	// drawn as a rule above, the low below, each in the temperature's
 	// own ramp colour with its value at the line's end.
+	// The band triples in height when the screen has room: everything
+	// laid out so far, the band with its two bounds, the blank after
+	// it, the rain and wind sections below (7 lines), and the footer.
+	bandRows := 1
+	if len(lines)+2+3+7+1 <= m.h {
+		bandRows = 3
+	}
 	lines = append(lines, row("Temp", tempBound(day.HiC, chartW, m.units)))
-	lines = append(lines, row("",
-		widgets.Sparkline(temps, chartW, func(v float64) lipglossStyle {
-			return styleFor(tempColor(v))
-		})))
+	for _, band := range widgets.SparklineRows(temps, chartW, bandRows,
+		func(v float64) lipglossStyle { return styleFor(tempColor(v)) }) {
+		lines = append(lines, row("", band))
+	}
 	lines = append(lines, row("", tempBound(day.LoC, chartW, m.units)))
 	lines = append(lines, blank)
 
