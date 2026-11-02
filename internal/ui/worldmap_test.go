@@ -401,3 +401,21 @@ func TestMapUnitsToggleUpdatesConfig(t *testing.T) {
 		t.Errorf("cfg.Units = %q, want it to track the toggled units %q", m.cfg.Units, m.units.String())
 	}
 }
+
+func TestMapStatusLineShowsDayBesideCity(t *testing.T) {
+	m := mapTestModel(t, parisCoord)
+	for _, day := range []int{0, 2} {
+		m.cursorDay = day
+		want := dayLabel(m.now(), day)
+		for _, w := range []int{50, 80} {
+			m.w = w
+			got := m.mapStatusLine(0)
+			if !strings.Contains(got, " · "+want) {
+				t.Errorf("day %d w=%d: status line %q missing %q", day, w, got, want)
+			}
+			if lipgloss.Width(got) != w {
+				t.Errorf("day %d: width = %d, want %d", day, lipgloss.Width(got), w)
+			}
+		}
+	}
+}
